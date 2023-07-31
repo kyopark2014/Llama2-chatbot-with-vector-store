@@ -1,2 +1,1 @@
-# Llama2-chatbot-for-korean
-It shows a korean chatbot using Llama 2.
+# Llama 2를 이용하여 Korean Chatbot 만들기
