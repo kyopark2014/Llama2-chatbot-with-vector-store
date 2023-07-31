@@ -62,15 +62,46 @@ parameters = {
     "max_new_tokens": 256, 
     "top_p": 0.9, 
     "temperature": 0.6
-}        
+}     
+
+client = boto3.client("sagemaker-runtime")
+text = 'Building a website can be done in 10 simple steps'
+
+def get_llm(text, parameters):
+    dialog = [{"role": "user", "content": text}]
+
+    payload = {
+        "inputs": [dialog], 
+        "parameters":parameters
+    }
+    
+    response = client.invoke_endpoint(
+        EndpointName=endpoint_name, 
+        ContentType='application/json', 
+        Body=json.dumps(payload).encode('utf-8'),
+        CustomAttributes="accept_eula=true",
+    )                
+
+    body = response["Body"].read().decode("utf8")
+    body_resp = json.loads(body)
+    print(body_resp[0]['generation']['content'])
+
+    return body_resp[0]['generation']['content']
+
+
+"""
+custom_attribute = {
+    "CustomAttributes": "accept_eula=true"
+}  
         
 llm = SagemakerEndpoint(
     endpoint_name = endpoint_name, 
     region_name = aws_region, 
     model_kwargs = parameters,
+    endpoint_kwargs = custom_attribute,
     content_handler = content_handler
 )
-
+"""
 # embedding
 #bedrock_embeddings = BedrockEmbeddings(client=boto3_bedrock)
 
@@ -192,7 +223,9 @@ def lambda_handler(event, context):
         print('enableRAG: ', enableRAG)
         text = body
         if enableRAG==False:                
-            msg = llm(text)
+            #msg = llm(text)
+            msg = get_llm(text)
+            
         else:
             msg = get_answer_using_query(text, vectorstore, rag_type)
             print('msg1: ', msg)
