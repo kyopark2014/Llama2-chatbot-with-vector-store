@@ -250,6 +250,18 @@ def lambda_handler(event, context):
             if enableRAG==False: 
                 enableRAG = True
         """            
+        
+        # summerization to show the document
+        prompt_template = """Write a concise summary of the following:
+
+        {text}
+                
+        CONCISE SUMMARY """
+
+        PROMPT = PromptTemplate(template=prompt_template, input_variables=["text"])
+        chain = load_summarize_chain(llm, chain_type="stuff", prompt=PROMPT)
+        summary = chain.run(docs)
+        print('summary: ', summary)
                 
     elapsed_time = int(time.time()) - start
     print("total run time(sec): ", elapsed_time)
