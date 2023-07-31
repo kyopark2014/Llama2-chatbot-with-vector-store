@@ -208,6 +208,16 @@ export class CdkChatbotLlama2Stack extends cdk.Stack {
     lambdaChatApi.grantInvoke(new iam.ServicePrincipal('apigateway.amazonaws.com'));  
     s3Bucket.grantRead(lambdaChatApi); // permission for s3
     callLogDataTable.grantReadWriteData(lambdaChatApi); // permission for dynamo
+    
+    const SageMakerPolicy = new iam.PolicyStatement({  // policy statement for sagemaker
+      actions: ['sagemaker:*'],
+      resources: ['*'],
+    });
+    lambdaChatApi.role?.attachInlinePolicy( // add sagemaker policy
+      new iam.Policy(this, `sagemaker-policy-for-${projectName}`, {
+        statements: [SageMakerPolicy],
+      }),
+    );
 
     // role
     const role = new iam.Role(this, `api-role-for-${projectName}`, {
