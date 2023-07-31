@@ -88,6 +88,9 @@ def get_llm(text):
 
 ## 실행결과
 
+한국어를 이해해서 영어로 답변하는 정도의 성능을 보여주고 있습니다.
+
+![image](https://github.com/kyopark2014/Llama2-chatbot-using-langchain/assets/52392004/b31037d1-d580-4489-a8ad-2d50df6eb084)
 
 
 ## Reference 
