@@ -1,5 +1,6 @@
 # LangChain으로 Llama 2에서 Chatbot 만들기
 
+여기서는 Llama 2를 SageMaker JumpStart를 이용하여 설치하고 간단한 Chat appplication을 만드는것을 보여줍니다.
 
 ## LangChain 이용하기
 
