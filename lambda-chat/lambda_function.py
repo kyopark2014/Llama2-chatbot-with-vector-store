@@ -209,13 +209,7 @@ def lambda_handler(event, context):
         print('enableRAG: ', enableRAG)
         text = body
         if enableRAG==False:                
-            msg_eng = llm(text)
-            print('msg_eng: ', msg_eng)
-
-            new_query = "Translate from English to Korean: "+msg_eng
-            print('new_query: ', new_query)
-
-            msg = llm(new_query)
+            msg = llm(text)
 
         else:
             msg = get_answer_using_query(text, vectorstore, rag_type)
