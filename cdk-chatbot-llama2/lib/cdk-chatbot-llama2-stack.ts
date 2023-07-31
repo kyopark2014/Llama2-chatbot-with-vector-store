@@ -25,6 +25,9 @@ let rag_type = "faiss";  // opensearch
 const opensearch_account = "admin";
 const opensearch_passwd = "Wifi1234!";
 
+
+
+
 export class CdkChatbotLlama2Stack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
@@ -76,15 +79,6 @@ export class CdkChatbotLlama2Stack extends cdk.Stack {
     callLogDataTable.addGlobalSecondaryIndex({ // GSI
       indexName: callLogIndexName,
       partitionKey: { name: 'type', type: dynamodb.AttributeType.STRING },
-    });
-
-    // DynamoDB for configuration
-    const configTableName = `db-configuration-for-${projectName}`;
-    const configDataTable = new dynamodb.Table(this, `dynamodb-configuration-for-${projectName}`, {
-      tableName: configTableName,
-      partitionKey: { name: 'user-id', type: dynamodb.AttributeType.STRING },      
-      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
     // copy web application files into s3 bucket
@@ -223,7 +217,6 @@ export class CdkChatbotLlama2Stack extends cdk.Stack {
         s3_bucket: s3Bucket.bucketName,
         s3_prefix: s3_prefix,
         callLogTableName: callLogTableName,
-        configTableName: configTableName,
         rag_type: rag_type,
         opensearch_account: opensearch_account,
         opensearch_passwd: opensearch_passwd
@@ -232,7 +225,6 @@ export class CdkChatbotLlama2Stack extends cdk.Stack {
     lambdaChatApi.grantInvoke(new iam.ServicePrincipal('apigateway.amazonaws.com'));  
     s3Bucket.grantRead(lambdaChatApi); // permission for s3
     callLogDataTable.grantReadWriteData(lambdaChatApi); // permission for dynamo
-    configDataTable.grantReadWriteData(lambdaChatApi); // permission for dynamo
 
     // role
     const role = new iam.Role(this, `api-role-for-${projectName}`, {

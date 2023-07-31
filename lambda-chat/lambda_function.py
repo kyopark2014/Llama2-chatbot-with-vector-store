@@ -37,7 +37,6 @@ s3 = boto3.client('s3')
 s3_bucket = os.environ.get('s3_bucket') # bucket name
 s3_prefix = os.environ.get('s3_prefix')
 callLogTableName = os.environ.get('callLogTableName')
-configTableName = os.environ.get('configTableName')
 endpoint_url = os.environ.get('endpoint_url')
 opensearch_url = os.environ.get('opensearch_url')
 bedrock_region = os.environ.get('bedrock_region')
@@ -47,59 +46,40 @@ opensearch_passwd = os.environ.get('opensearch_passwd')
 modelId = os.environ.get('model_id')
 print('model_id: ', modelId)
 
-def save_configuration(userId, modelId):
-    item = {
-        'user-id': {'S':userId},
-        'model-id': {'S':modelId}
-    }
+endpoint_name = os.environ.get('endpoint')
 
-    client = boto3.client('dynamodb')
-    try:
-        resp =  client.put_item(TableName=configTableName, Item=item)
-        print('resp, ', resp)
-    except: 
-        raise Exception ("Not able to write into dynamodb")            
+# initiate llm model based on langchain
+class ContentHandler(LLMContentHandler):
+    content_type = "application/json"
+    accepts = "application/json"
 
-def load_configuration(userId):
-    print('configTableName: ', configTableName)
-    print('userId: ', userId)
+    def transform_input(self, prompt: str, model_kwargs: dict) -> bytes:
+        input_str = json.dumps({'inputs': prompt, 'parameters': model_kwargs})
+        return input_str.encode('utf-8')
+      
+    def transform_output(self, output: bytes) -> str:
+        response_json = json.loads(output.read().decode("utf-8"))
+        return response_json[0]["generation"]["content"]
 
-    client = boto3.client('dynamodb')    
-    try:
-        key = {
-            'user-id': {'S':userId}
-        }
+content_handler = ContentHandler()
 
-        resp = client.get_item(TableName=configTableName, Key=key)
-        print('model-id: ', resp['Item']['model-id']['S'])
+aws_region = boto3.Session().region_name
 
-        return resp['Item']['model-id']['S']
-    except: 
-        print('No record of configuration!')
-        modelId = os.environ.get('model_id')
-        save_configuration(userId, modelId)
-
-        return modelId
-
-# Bedrock Contiguration
-bedrock_region = bedrock_region
-bedrock_config = {
-    "region_name":bedrock_region,
-    "endpoint_url":endpoint_url
-}
-    
-# supported llm list from bedrock
-boto3_bedrock = bedrock.get_bedrock_client(
-    region=bedrock_config["region_name"],
-    url_override=bedrock_config["endpoint_url"])
-    
-modelInfo = boto3_bedrock.list_foundation_models()    
-print('models: ', modelInfo)
-
-llm = Bedrock(model_id=modelId, client=boto3_bedrock)
+parameters = {
+    "max_new_tokens": 256, 
+    "top_p": 0.9, 
+    "temperature": 0.6
+}        
+        
+llm = SagemakerEndpoint(
+    endpoint_name = endpoint_name, 
+    region_name = aws_region, 
+    model_kwargs = parameters,
+    content_handler = content_handler
+)
 
 # embedding
-bedrock_embeddings = BedrockEmbeddings(client=boto3_bedrock)
+#bedrock_embeddings = BedrockEmbeddings(client=boto3_bedrock)
 
 enableRAG = False
 
@@ -209,135 +189,77 @@ def lambda_handler(event, context):
     body = event['body']
     print('body: ', body)
 
-    global modelId, llm, vectorstore, enableRAG, rag_type
+    global llm, vectorstore, enableRAG, rag_type
     
-    modelId = load_configuration(userId)
-    if(modelId==""): 
-        modelId = os.environ.get('model_id')
-        save_configuration(userId, modelId)
-
     start = int(time.time())    
 
     msg = ""
-    if type == 'text' and body[:11] == 'list models':
-        msg = f"The list of models: \n"
-        lists = modelInfo['modelSummaries']
-        
-        for model in lists:
-            msg += f"{model['modelId']}\n"
-        
-        msg += f"current model: {modelId}"
-        print('model lists: ', msg)
     
-    elif type == 'text' and body[:20] == 'change the model to ':
-        new_model = body.rsplit('to ', 1)[-1]
-        print(f"new model: {new_model}, current model: {modelId}")
-
-        if modelId == new_model:
-            msg = "No change! The new model is the same as the current model."
-        else:        
-            lists = modelInfo['modelSummaries']
-            isChanged = False
-            for model in lists:
-                if model['modelId'] == new_model:
-                    print(f"new modelId: {new_model}")
-                    modelId = new_model
-                    llm = Bedrock(model_id=modelId, client=boto3_bedrock)
-                    isChanged = True
-                    save_configuration(userId, modelId)            
-
-            if isChanged:
-                msg = f"The model is changed to {modelId}"
-            else:
-                msg = f"{modelId} is not in lists."
-        print('msg: ', msg)
-
-    else:             
-        if type == 'text':
-            print('enableRAG: ', enableRAG)
-            text = body
-            if enableRAG==False:                
-                msg = llm(text)
-            else:
-                msg = get_answer_using_query(text, vectorstore, rag_type)
-                print('msg1: ', msg)
+    if type == 'text':
+        print('enableRAG: ', enableRAG)
+        text = body
+        if enableRAG==False:                
+            msg = llm(text)
+        else:
+            msg = get_answer_using_query(text, vectorstore, rag_type)
+            print('msg1: ', msg)
             
-        elif type == 'document':
-            object = body
+    elif type == 'document':
+        object = body
         
-            file_type = object[object.rfind('.')+1:len(object)]
-            print('file_type: ', file_type)
+        file_type = object[object.rfind('.')+1:len(object)]
+        print('file_type: ', file_type)
             
-            # load documents where text, pdf, csv are supported
-            docs = load_document(file_type, object)
-                        
-            if rag_type == 'faiss':
-                if enableRAG == False:                    
-                    vectorstore = FAISS.from_documents( # create vectorstore from a document
-                        docs,  # documents
-                        bedrock_embeddings  # embeddings
-                    )
-                    enableRAG = True                    
-                else:                             
-                    vectorstore_new = FAISS.from_documents( # create new vectorstore from a document
-                        docs,  # documents
-                        bedrock_embeddings,  # embeddings
-                    )                               
-                    vectorstore.merge_from(vectorstore_new) # merge 
-                    print('vector store size: ', len(vectorstore.docstore._dict))
+        # load documents where text, pdf, csv are supported
+        docs = load_document(file_type, object)
 
-            elif rag_type == 'opensearch':         
-                vectorstore = OpenSearchVectorSearch.from_documents(
-                    docs, 
-                    bedrock_embeddings, 
-                    opensearch_url=opensearch_url,
-                    http_auth=(opensearch_account, opensearch_passwd),
+        """ 
+        if rag_type == 'faiss':
+            if enableRAG == False:                    
+                vectorstore = FAISS.from_documents( # create vectorstore from a document
+                    docs,  # documents
+                    bedrock_embeddings  # embeddings
                 )
-                if enableRAG==False: 
-                    enableRAG = True
-                    
-            # summerization to show the document
-            prompt_template = """Write a concise summary of the following:
+                enableRAG = True                    
+            else:                             
+                vectorstore_new = FAISS.from_documents( # create new vectorstore from a document
+                    docs,  # documents
+                    bedrock_embeddings,  # embeddings
+                )                               
+                vectorstore.merge_from(vectorstore_new) # merge 
+                print('vector store size: ', len(vectorstore.docstore._dict))
 
-            {text}
+        elif rag_type == 'opensearch':         
+            vectorstore = OpenSearchVectorSearch.from_documents(
+                docs, 
+                bedrock_embeddings, 
+                opensearch_url=opensearch_url,
+                http_auth=(opensearch_account, opensearch_passwd),
+            )
+            if enableRAG==False: 
+                enableRAG = True
+        """            
                 
-            CONCISE SUMMARY """
+    elapsed_time = int(time.time()) - start
+    print("total run time(sec): ", elapsed_time)
 
-            print('template: ', prompt_template)
-            PROMPT = PromptTemplate(template=prompt_template, input_variables=["text"])
-            chain = load_summarize_chain(llm, chain_type="stuff", prompt=PROMPT)
-            summary = chain.run(docs)
-            print('summary: ', summary)
+    print('msg: ', msg)
 
-            msg = summary
-            # summerization
-            #query = "summerize the documents"
-            #msg = get_answer_using_query(query, vectorstore, rag_type)
-            #print('msg1: ', msg)
+    item = {
+        'user-id': {'S':userId},
+        'request-id': {'S':requestId},
+        'type': {'S':type},
+        'body': {'S':body},
+        'msg': {'S':msg}
+    }
 
-            #msg = get_answer_using_template(query, vectorstore, rag_type)
-            #print('msg2: ', msg)
-                
-        elapsed_time = int(time.time()) - start
-        print("total run time(sec): ", elapsed_time)
-
-        print('msg: ', msg)
-
-        item = {
-            'user-id': {'S':userId},
-            'request-id': {'S':requestId},
-            'type': {'S':type},
-            'body': {'S':body},
-            'msg': {'S':msg}
-        }
-
-        client = boto3.client('dynamodb')
-        try:
-            resp =  client.put_item(TableName=callLogTableName, Item=item)
-        except: 
-            raise Exception ("Not able to write into dynamodb")
+    client = boto3.client('dynamodb')
+    try:
+        resp =  client.put_item(TableName=callLogTableName, Item=item)
+    except: 
+        raise Exception ("Not able to write into dynamodb")
         
-        print('resp, ', resp)
+    print('resp, ', resp)
 
     return {
         'statusCode': 200,
