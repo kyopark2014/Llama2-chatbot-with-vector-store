@@ -65,7 +65,7 @@ index = 0;
 
 addNotifyMessage("start chat with Llama 2");
 
-addReceivedMessage("Welcome to Llama chatbot!")
+addReceivedMessage("Welcome to Llama 2!")
 
 // Listeners
 message.addEventListener('keyup', function(e){
