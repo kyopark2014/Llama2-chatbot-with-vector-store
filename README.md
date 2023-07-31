@@ -1,7 +1,7 @@
 # LangChain으로 Llama 2에서 Chatbot 만들기
 
 
-## case: LangChain 
+## LangChain 이용하기
 
 LangChain을 이용해서 Llama 2에 연결하는 경우에 아래와 같이 endpoint_kwargs에 CustomAttributes를 추가합니다. 
 
@@ -52,7 +52,7 @@ llm = SagemakerEndpoint(
 )
 ```
 
-## case: SageMaker Endpoint
+## SageMaker Endpoint로 구현하기
 
 SageMaker Endpoint를 직접 호출하여 prompt 응답을 받는 함수입니다.
 
@@ -84,6 +84,11 @@ def get_llm(text):
 
     return body_resp[0]['generation']['content']
 ```
+
+
+## 실행결과
+
+
 
 ## Reference 
 
