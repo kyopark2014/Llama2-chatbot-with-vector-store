@@ -16,17 +16,12 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 const debug = false;
 const stage = 'dev';
 const s3_prefix = 'docs';
-const bedrock_region = "us-west-2";
-const endpoint_url = "https://prod.us-west-2.frontend.bedrock.aws.dev";
-const model_id = "amazon.titan-tg1-large"; // amazon.titan-e1t-medium, anthropic.claude-v1
-const projectName = "qa-chatbot-with-rag";
+const projectName = "llama2-chatbot";
 const bucketName = `storage-for-${projectName}`;
 let rag_type = "faiss";  // opensearch
 const opensearch_account = "admin";
 const opensearch_passwd = "Wifi1234!";
-
-
-
+const endpoint = 'jumpstart-dft-meta-textgeneration-llama-2-7b-f';
 
 export class CdkChatbotLlama2Stack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -178,21 +173,11 @@ export class CdkChatbotLlama2Stack extends cdk.Stack {
       roleName: `role-lambda-chat-for-${projectName}`,
       assumedBy: new iam.CompositePrincipal(
         new iam.ServicePrincipal("lambda.amazonaws.com"),
-        new iam.ServicePrincipal("bedrock.amazonaws.com"),
       )
     });
     roleLambda.addManagedPolicy({
       managedPolicyArn: 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole',
     });
-    const BedrockPolicy = new iam.PolicyStatement({ 
-      resources: ['*'],
-      actions: ['bedrock:*'],
-    });        
-    roleLambda.attachInlinePolicy( // add bedrock policy
-      new iam.Policy(this, `bedrock-policy-for-${projectName}`, {
-        statements: [BedrockPolicy],
-      }),
-    );         
     if(rag_type == "opensearch") {
       roleLambda.attachInlinePolicy( // add opensearch policy
         new iam.Policy(this, `opensearch-policy-for-${projectName}`, {
@@ -210,16 +195,14 @@ export class CdkChatbotLlama2Stack extends cdk.Stack {
       memorySize: 4096,
       role: roleLambda,
       environment: {
-        bedrock_region: bedrock_region,
-        endpoint_url: endpoint_url,
         opensearch_url: opensearch_url,
-        model_id: model_id,
         s3_bucket: s3Bucket.bucketName,
         s3_prefix: s3_prefix,
         callLogTableName: callLogTableName,
         rag_type: rag_type,
         opensearch_account: opensearch_account,
-        opensearch_passwd: opensearch_passwd
+        opensearch_passwd: opensearch_passwd,
+        endpoint: endpoint
       }
     });     
     lambdaChatApi.grantInvoke(new iam.ServicePrincipal('apigateway.amazonaws.com'));  

@@ -29,22 +29,15 @@ from langchain.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
 from langchain.vectorstores import OpenSearchVectorSearch
 
-module_path = "."
-sys.path.append(os.path.abspath(module_path))
-from utils import bedrock, print_ww
-
 s3 = boto3.client('s3')
 s3_bucket = os.environ.get('s3_bucket') # bucket name
 s3_prefix = os.environ.get('s3_prefix')
 callLogTableName = os.environ.get('callLogTableName')
-endpoint_url = os.environ.get('endpoint_url')
 opensearch_url = os.environ.get('opensearch_url')
-bedrock_region = os.environ.get('bedrock_region')
 rag_type = os.environ.get('rag_type')
 opensearch_account = os.environ.get('opensearch_account')
 opensearch_passwd = os.environ.get('opensearch_passwd')
-modelId = os.environ.get('model_id')
-print('model_id: ', modelId)
+endpoint = os.environ.get('endpoint')
 
 endpoint_name = os.environ.get('endpoint')
 
@@ -131,11 +124,11 @@ def get_answer_using_query(query, vectorstore, rag_type):
     print(f'{len(relevant_documents)} documents are fetched which are relevant to the query.')
     print('----')
     for i, rel_doc in enumerate(relevant_documents):
-        print_ww(f'## Document {i+1}: {rel_doc.page_content}.......')
+        print(f'## Document {i+1}: {rel_doc.page_content}.......')
         print('---')
     
     answer = wrapper_store.query(question=query, llm=llm)
-    print_ww(answer)
+    print(answer)
 
     return answer
 
@@ -149,7 +142,7 @@ def get_answer_using_template(query, vectorstore, rag_type):
     print(f'{len(relevant_documents)} documents are fetched which are relevant to the query.')
     print('----')
     for i, rel_doc in enumerate(relevant_documents):
-        print_ww(f'## Document {i+1}: {rel_doc.page_content}.......')
+        print(f'## Document {i+1}: {rel_doc.page_content}.......')
         print('---')
 
     prompt_template = """Human: Use the following pieces of context to provide a concise answer to the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer.
