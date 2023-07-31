@@ -1,4 +1,4 @@
-# Llama 2를 이용하여 Korean Chatbot 만들기
+# LangChain으로 Llama 2에서 Chatbot 만들기
 
 
 ## case: LangChain 
