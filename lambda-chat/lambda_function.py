@@ -85,32 +85,7 @@ llm = SagemakerEndpoint(
     content_handler = content_handler
 )
 
-def get_llm(text):
-    dialog = [{"role": "user", "content": text}]
 
-    parameters = {
-        "max_new_tokens": 256, 
-        "top_p": 0.9, 
-        "temperature": 0.6
-    } 
-
-    payload = {
-        "inputs": [dialog], 
-        "parameters":parameters
-    }
-    
-    response = client.invoke_endpoint(
-        EndpointName=endpoint_name, 
-        ContentType='application/json', 
-        Body=json.dumps(payload).encode('utf-8'),
-        CustomAttributes="accept_eula=true",
-    )                
-
-    body = response["Body"].read().decode("utf8")
-    body_resp = json.loads(body)
-    print(body_resp[0]['generation']['content'])
-
-    return body_resp[0]['generation']['content']
 
 
 # embedding
@@ -234,8 +209,13 @@ def lambda_handler(event, context):
         print('enableRAG: ', enableRAG)
         text = body
         if enableRAG==False:                
-            msg = llm(text)
-            #msg = get_llm(text)
+            msg_eng = llm(text)
+            print('msg_eng: ', msg_eng)
+
+            new_query = "Translate from English to Korean: "+msg_eng
+            print('new_query: ', new_query)
+
+            msg = llm(new_query)
 
         else:
             msg = get_answer_using_query(text, vectorstore, rag_type)
