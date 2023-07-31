@@ -63,9 +63,9 @@ calleeId.textContent = "AWS";
 
 index = 0;
 
-addNotifyMessage("start chat with Amazon Bedrock");
+addNotifyMessage("start chat with Llama 2");
 
-addReceivedMessage("Amazon Bedrock을 이용하여 주셔서 감사합니다. 원하는 질문을 입력하세요. 아래의 파일 버튼을 선택해 TXT, PDF, CSV 문서를 올리면 좀더 향상된 대화(RAG)를 하실 수 있습니다.")
+addReceivedMessage("Welcome to Llama chatbot!")
 
 // Listeners
 message.addEventListener('keyup', function(e){
