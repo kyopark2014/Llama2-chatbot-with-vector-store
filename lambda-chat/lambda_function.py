@@ -262,6 +262,8 @@ def lambda_handler(event, context):
         chain = load_summarize_chain(llm, chain_type="stuff", prompt=PROMPT)
         summary = chain.run(docs)
         print('summary: ', summary)
+
+        msg = summary
                 
     elapsed_time = int(time.time()) - start
     print("total run time(sec): ", elapsed_time)
