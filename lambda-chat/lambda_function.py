@@ -58,17 +58,17 @@ content_handler = ContentHandler()
 
 aws_region = boto3.Session().region_name
 
-parameters = {
-    "max_new_tokens": 256, 
-    "top_p": 0.9, 
-    "temperature": 0.6
-}     
-
 client = boto3.client("sagemaker-runtime")
 text = 'Building a website can be done in 10 simple steps'
 
-def get_llm(text, parameters):
+def get_llm(text):
     dialog = [{"role": "user", "content": text}]
+
+    parameters = {
+        "max_new_tokens": 256, 
+        "top_p": 0.9, 
+        "temperature": 0.6
+    } 
 
     payload = {
         "inputs": [dialog], 
@@ -225,7 +225,7 @@ def lambda_handler(event, context):
         if enableRAG==False:                
             #msg = llm(text)
             msg = get_llm(text)
-            
+
         else:
             msg = get_answer_using_query(text, vectorstore, rag_type)
             print('msg1: ', msg)
