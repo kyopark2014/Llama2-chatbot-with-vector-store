@@ -47,7 +47,21 @@ class ContentHandler(LLMContentHandler):
     accepts = "application/json"
 
     def transform_input(self, prompt: str, model_kwargs: dict) -> bytes:
-        input_str = json.dumps({'inputs': prompt, 'parameters': model_kwargs})
+        input_str = json.dumps({
+            "inputs" : 
+            [
+                [
+                    {
+                        "role" : "system",
+                        "content" : "You are a kind robot."
+                    },
+                    {
+                        "role" : "user", 
+                        "content" : prompt
+                    }
+                ]
+            ],
+            "parameters" : {**model_kwargs}})
         return input_str.encode('utf-8')
       
     def transform_output(self, output: bytes) -> str:
@@ -55,11 +69,21 @@ class ContentHandler(LLMContentHandler):
         return response_json[0]["generation"]["content"]
 
 content_handler = ContentHandler()
-
 aws_region = boto3.Session().region_name
-
 client = boto3.client("sagemaker-runtime")
-text = 'Building a website can be done in 10 simple steps'
+parameters = {
+    "max_new_tokens": 256, 
+    "top_p": 0.9, 
+    "temperature": 0.6
+} 
+
+llm = SagemakerEndpoint(
+    endpoint_name = endpoint_name, 
+    region_name = aws_region, 
+    model_kwargs = parameters,
+    endpoint_kwargs={"CustomAttributes": "accept_eula=true"},
+    content_handler = content_handler
+)
 
 def get_llm(text):
     dialog = [{"role": "user", "content": text}]
@@ -89,19 +113,6 @@ def get_llm(text):
     return body_resp[0]['generation']['content']
 
 
-"""
-custom_attribute = {
-    "CustomAttributes": "accept_eula=true"
-}  
-        
-llm = SagemakerEndpoint(
-    endpoint_name = endpoint_name, 
-    region_name = aws_region, 
-    model_kwargs = parameters,
-    endpoint_kwargs = custom_attribute,
-    content_handler = content_handler
-)
-"""
 # embedding
 #bedrock_embeddings = BedrockEmbeddings(client=boto3_bedrock)
 
@@ -223,8 +234,8 @@ def lambda_handler(event, context):
         print('enableRAG: ', enableRAG)
         text = body
         if enableRAG==False:                
-            #msg = llm(text)
-            msg = get_llm(text)
+            msg = llm(text)
+            #msg = get_llm(text)
 
         else:
             msg = get_answer_using_query(text, vectorstore, rag_type)
