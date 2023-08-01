@@ -6,7 +6,7 @@ Vector store는 이미지, 문서(text document), 오디오와 같은 구조화 
 
 ## 아키텍처 개요
 
-전체적인 아키텍처는 아래와 같습니다. 사용자가 [Amazon S3](https://aws.amazon.com/ko/s3/)에 업로드한 문서는 embedding을 통해 vector store에 저장됩니다. 이후 사용자가 질문을 하면 vector store를 통해 질문에 가장 가까운 문장들을 받아오고 이를 기반으로 prompt를 생성하여 대규모 언어 모델(LLM)에 질문을 요청하게 됩니다. 만약 vector store에서 질문에 가까운 문장이 없다면 대규모 언어 모델(LLM)의 Endpoint로 질문을 전달합니다. 대용량 파일을 S3에 업로드 할 수 있도록 [presigned url](https://docs.aws.amazon.com/ko_kr/AmazonS3/latest/userguide/PresignedUrlUploadObject.html)을 이용하였고, 질문과 답변을 수행한 call log는 [Amazon DynamoDB](https://aws.amazon.com/ko/dynamodb/)에 저장되어 이후 데이터 수집 및 분석에 사용됩니다. 여기서 대용량 언어 모델로 [Bedrock Titan](https://aws.amazon.com/ko/bedrock/titan/)을 이용합니다. Titan 모델은 Amazon에 의해서 대용량 데이터셋으로 사전훈련 되었고 강력하고 범용적인 목적을 위해 사용될 수 있습니다. 또한 [LangChain을 활용](https://python.langchain.com/docs/get_started/introduction.html)하여 Application을 개발하였고, chatbot을 제공하는 인프라는 [AWS CDK](https://aws.amazon.com/ko/cdk/)를 통해 배포합니다. 
+전체적인 아키텍처는 아래와 같습니다. 사용자가 [Amazon S3](https://aws.amazon.com/ko/s3/)에 업로드한 문서는 embedding을 통해 vector store에 저장됩니다. 이후 사용자가 질문을 하면 vector store를 통해 질문에 가장 가까운 문장들을 받아오고 이를 기반으로 prompt를 생성하여 대규모 언어 모델(LLM)에 질문을 요청하게 됩니다. 만약 vector store에서 질문에 가까운 문장이 없다면 대규모 언어 모델(LLM)의 Endpoint로 질문을 전달합니다. 대용량 파일을 S3에 업로드 할 수 있도록 [presigned url](https://docs.aws.amazon.com/ko_kr/AmazonS3/latest/userguide/PresignedUrlUploadObject.html)을 이용하였고, 질문과 답변을 수행한 call log는 [Amazon DynamoDB](https://aws.amazon.com/ko/dynamodb/)에 저장되어 이후 데이터 수집 및 분석에 사용됩니다. 여기서 대용량 언어 모델로 Llama 2를 이용합니다. Titan 모델은 Amazon에 의해서 대용량 데이터셋으로 사전훈련 되었고 강력하고 범용적인 목적을 위해 사용될 수 있습니다. 또한 [LangChain을 활용](https://python.langchain.com/docs/get_started/introduction.html)하여 Application을 개발하였고, chatbot을 제공하는 인프라는 [AWS CDK](https://aws.amazon.com/ko/cdk/)를 통해 배포합니다. 
 
 <img src="https://github.com/kyopark2014/Llama2-chatbot-with-vector-store/assets/52392004/e54d2e2b-1a2a-459d-af00-1afc323a20ff" width="800">
 
@@ -192,7 +192,7 @@ from langchain.vectorstores import FAISS
 
 vectorstore = FAISS.from_documents( # create vectorstore from a document
     docs, 
-    bedrock_embeddings  
+    embeddings  
 )
 ```
 
@@ -281,7 +281,7 @@ from langchain.vectorstores import OpenSearchVectorSearch
 new_vectorstore = OpenSearchVectorSearch(
     index_name = "rag-index-" + userId + '-' + requestId,
     is_aoss = False,
-    embedding_function = bedrock_embeddings,
+    embedding_function = embeddings,
     opensearch_url = opensearch_url,
     http_auth=(opensearch_account, opensearch_passwd),
 )
@@ -300,7 +300,7 @@ relevant_documents = vectorstore.similarity_search(query)
 vectorstore = OpenSearchVectorSearch(
     index_name = 'rag-index-'+userId+'-*',
     is_aoss = False,
-    embedding_function = bedrock_embeddings,
+    embedding_function = embeddings,
     opensearch_url=opensearch_url,
     http_auth=(opensearch_account, opensearch_passwd),
 )
@@ -412,7 +412,7 @@ cdk destroy
 
 ## 결론
 
-AWS 서울 리전에서 Amazon Bedrock과 vector store를 이용하여 질문과 답변(Question/Answering)을 수행하는 chatbot을 구현하였습니다. Amazon Bedrock은 여러 종류의 대용량 언어 모델중에 한개를 선택하여 사용할 수 있습니다. 여기서는 Amazon Titan을 이용하여 RAG 동작을 구현하였고, 대용량 언어 모델의 환각(hallucination) 문제를 해결할 수 있었습니다. 또한 Chatbot 어플리케이션 개발을 위해 LangChain을 활용하였고, IaC(Infrastructure as Code)로 AWS CDK를 이용하였습니다. 대용량 언어 모델은 향후 다양한 어플리케이션에서 효과적으로 활용될것으로 기대됩니다. Amazon Bedrock을 이용하여 대용량 언어 모델을 개발하면 기존 AWS 인프라와 손쉽게 연동하고 다양한 어플리케이션을 효과적으로 개발할 수 있습니다.
+SageMaker JumpStart를 이용하여 대규모 언어 모델(LLM)인 LLama 2를 쉽게 배포하였고, vector store를 이용하여 질문과 답변(Question/Answering)을 수행하는 chatbot의 기능을 향상시켰습니다. Amazon SageMaker JumpStart에서는 여러 종류의 대용량 언어 모델에서 한개를 선택하여 사용할 수 있습니다. 여기서는 Llama 2을 이용하여 RAG 동작을 구현하였고, 대용량 언어 모델의 환각(hallucination) 문제를 해결할 수 있었습니다. 또한 Chatbot 어플리케이션 개발을 위해 LangChain을 활용하였고, IaC(Infrastructure as Code)로 AWS CDK를 이용하였습니다. 대용량 언어 모델은 향후 다양한 어플리케이션에서 효과적으로 활용될것으로 기대됩니다. SageMaker JumpStart을 이용하여 대용량 언어 모델을 개발하면 기존 AWS 인프라와 손쉽게 연동하고 다양한 어플리케이션을 효과적으로 개발할 수 있습니다.
 
 
 
