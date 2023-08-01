@@ -18,7 +18,7 @@ const stage = 'dev';
 const s3_prefix = 'docs';
 const projectName = "llama2-chatbot";
 const bucketName = `storage-for-${projectName}`;
-let rag_type = "faiss";  // opensearch
+let rag_type = "opensearch";  // faiss
 const opensearch_account = "admin";
 const opensearch_passwd = "Wifi1234!";
 const endpoint = 'jumpstart-dft-meta-textgeneration-llama-2-7b-f';
@@ -131,7 +131,7 @@ export class CdkChatbotLlama2Stack extends cdk.Stack {
         accessPolicies: [OpenSearchAccessPolicy],      
         ebs: {
           volumeSize: 100,
-          volumeType: ec2.EbsDeviceVolumeType.GENERAL_PURPOSE_SSD,
+          volumeType: ec2.EbsDeviceVolumeType.GP3,
         },
         nodeToNodeEncryption: true,
         encryptionAtRest: {
@@ -241,8 +241,8 @@ export class CdkChatbotLlama2Stack extends cdk.Stack {
         stageName: stage,
 
         // logging for debug
-        loggingLevel: apiGateway.MethodLoggingLevel.INFO, 
-        dataTraceEnabled: true,
+        // loggingLevel: apiGateway.MethodLoggingLevel.INFO, 
+        // dataTraceEnabled: true,
       },
     });  
 

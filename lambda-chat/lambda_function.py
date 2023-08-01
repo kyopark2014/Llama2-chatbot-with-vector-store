@@ -10,24 +10,17 @@ import sys
 
 from langchain import PromptTemplate, SagemakerEndpoint
 from langchain.llms.sagemaker_endpoint import LLMContentHandler
-from langchain.text_splitter import CharacterTextSplitter
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.docstore.document import Document
 from langchain.chains.summarize import load_summarize_chain
 
-from langchain.agents import create_csv_agent
-from langchain.agents.agent_types import AgentType
-from langchain.llms.bedrock import Bedrock
-from langchain.chains.question_answering import load_qa_chain
-
 from langchain.vectorstores import FAISS
-from langchain.indexes import VectorstoreIndexCreator
+from langchain.vectorstores import OpenSearchVectorSearch
 from langchain.document_loaders import CSVLoader
-from langchain.embeddings import BedrockEmbeddings
 from langchain.indexes.vectorstore import VectorStoreIndexWrapper
 from langchain.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
-from langchain.vectorstores import OpenSearchVectorSearch
+from langchain.embeddings import SagemakerEndpointEmbeddings
 
 s3 = boto3.client('s3')
 s3_bucket = os.environ.get('s3_bucket') # bucket name
@@ -37,9 +30,8 @@ opensearch_url = os.environ.get('opensearch_url')
 rag_type = os.environ.get('rag_type')
 opensearch_account = os.environ.get('opensearch_account')
 opensearch_passwd = os.environ.get('opensearch_passwd')
-endpoint = os.environ.get('endpoint')
-
 endpoint_name = os.environ.get('endpoint')
+enableRAGForFaiss = False   
 
 # initiate llm model based on langchain
 class ContentHandler(LLMContentHandler):
@@ -85,13 +77,29 @@ llm = SagemakerEndpoint(
     content_handler = content_handler
 )
 
-
-
-
 # embedding
-#bedrock_embeddings = BedrockEmbeddings(client=boto3_bedrock)
+from langchain.embeddings.sagemaker_endpoint import EmbeddingsContentHandler
+from typing import Dict, List
+class ContentHandler2(EmbeddingsContentHandler):
+    content_type = "application/json"
+    accepts = "application/json"
 
-enableRAG = False
+    def transform_input(self, inputs: list[str], model_kwargs: Dict) -> bytes:
+        input_str = json.dumps({"inputs": inputs, **model_kwargs})
+        return input_str.encode("utf-8")
+
+    def transform_output(self, output: bytes) -> List[List[float]]:
+        response_json = json.loads(output.read().decode("utf-8"))
+        return response_json["vectors"]
+
+content_handler = ContentHandler2()
+embeddings = SagemakerEndpointEmbeddings(
+    # endpoint_name="endpoint-name",
+    # credentials_profile_name="credentials-profile-name",
+    endpoint_name="huggingface-pytorch-inference-2023-03-21-16-14-03-834",
+    region_name="us-east-1",
+    content_handler=content_handler,
+)
 
 # load documents from s3
 def load_document(file_type, s3_file_name):
@@ -121,13 +129,8 @@ def load_document(file_type, s3_file_name):
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000,chunk_overlap=100)
     texts = text_splitter.split_text(new_contents) 
     print('texts[0]: ', texts[0])
-        
-    docs = [
-        Document(
-            page_content=t
-        ) for t in texts[:3]
-    ]
-    return docs
+            
+    return texts
               
 def get_answer_using_query(query, vectorstore, rag_type):
     wrapper_store = VectorStoreIndexWrapper(vectorstore=vectorstore)
@@ -199,21 +202,32 @@ def lambda_handler(event, context):
     body = event['body']
     print('body: ', body)
 
-    global llm, vectorstore, enableRAG, rag_type
+    global llm, vectorstore, enableRAGForFaiss
     
+    if rag_type == 'opensearch':
+        vectorstore = OpenSearchVectorSearch(
+            # index_name = "rag-index-*", // all
+            index_name = 'rag-index-'+userId+'-*',
+            is_aoss = False,
+            embedding_function = embeddings,
+            opensearch_url=opensearch_url,
+            http_auth=(opensearch_account, opensearch_passwd),
+        )
+    elif rag_type == 'faiss':
+        print('enableRAGForFaiss = ', enableRAGForFaiss)
+   
     start = int(time.time())    
 
     msg = ""
     
     if type == 'text':
-        print('enableRAG: ', enableRAG)
         text = body
-        if enableRAG==False:                
-            msg = llm(text)
 
-        else:
-            msg = get_answer_using_query(text, vectorstore, rag_type)
-            print('msg1: ', msg)
+        if rag_type == 'faiss' and enableRAGForFaiss == False: 
+            msg = llm(text)
+        else: 
+            msg = get_answer_using_template(text, vectorstore, rag_type)
+        print('msg: ', msg)
             
     elif type == 'document':
         object = body
@@ -222,34 +236,42 @@ def lambda_handler(event, context):
         print('file_type: ', file_type)
             
         # load documents where text, pdf, csv are supported
-        docs = load_document(file_type, object)
+        texts = load_document(file_type, object)
 
-        """ 
+        docs = []
+        for i in range(len(texts)):
+            docs.append(
+                Document(
+                    page_content=texts[i],
+                    metadata={
+                        'name': object,
+                        'page':i+1
+                    }
+                )
+            )        
+        print('docs[0]: ', docs[0])    
+        print('docs size: ', len(docs))
+
         if rag_type == 'faiss':
-            if enableRAG == False:                    
+            if enableRAGForFaiss == False:                    
                 vectorstore = FAISS.from_documents( # create vectorstore from a document
                     docs,  # documents
-                    bedrock_embeddings  # embeddings
+                    embeddings  # embeddings
                 )
-                enableRAG = True                    
+                enableRAGForFaiss = True                    
             else:                             
-                vectorstore_new = FAISS.from_documents( # create new vectorstore from a document
-                    docs,  # documents
-                    bedrock_embeddings,  # embeddings
-                )                               
-                vectorstore.merge_from(vectorstore_new) # merge 
+                vectorstore.add_documents(docs)
                 print('vector store size: ', len(vectorstore.docstore._dict))
 
         elif rag_type == 'opensearch':         
-            vectorstore = OpenSearchVectorSearch.from_documents(
-                docs, 
-                bedrock_embeddings, 
-                opensearch_url=opensearch_url,
+            new_vectorstore = OpenSearchVectorSearch(
+                index_name="rag-index-"+userId+'-'+requestId,
+                is_aoss = False,
+                embedding_function = embeddings,
+                opensearch_url = opensearch_url,
                 http_auth=(opensearch_account, opensearch_passwd),
             )
-            if enableRAG==False: 
-                enableRAG = True
-        """            
+            new_vectorstore.add_documents(docs)    
         
         # summerization to show the document
         prompt_template = """Write a concise summary of the following:

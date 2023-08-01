@@ -65,7 +65,7 @@ index = 0;
 
 addNotifyMessage("start chat with Llama 2");
 
-addReceivedMessage("Welcome to Llama 2!")
+addReceivedMessage("Wecome to Llama 2. Use the enhance chatbot for question and answering using RAG when you upload a document such as TXT, PDF, or CSV.")
 
 // Listeners
 message.addEventListener('keyup', function(e){
@@ -191,7 +191,7 @@ attachFile.addEventListener('click', function(){
                 contentType = 'text/csv'
             }
 
-            addSentMessageForSummary("uploading the selected pdf in order to summerize...");
+            addSentMessageForSummary("uploading the selected document...");
 
             const uri = "upload";
             const xhr = new XMLHttpRequest();
