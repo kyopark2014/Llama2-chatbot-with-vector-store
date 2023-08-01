@@ -86,6 +86,10 @@ def get_llm(text):
     return body_resp[0]['generation']['content']
 ```
 
+### Embedding
+
+[SageMaker Endpoint Embeddings](https://python.langchain.com/docs/integrations/text_embedding/sagemaker-endpoint)에 따라 아래와 같이 embedding을 정의합니다.
+
 
 ## 실행결과
 
