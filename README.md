@@ -1,4 +1,4 @@
-# LangChain으로 Llama 2에서 Chatbot 만들기
+# SageMaker JumpStart와 Vector Store를 이용하여 Llama 2로 Chatbot 만들기
 
 여기서는 Llama 2를 SageMaker JumpStart를 이용하여 설치하고 간단한 Chat appplication을 만드는것을 보여줍니다.
 
