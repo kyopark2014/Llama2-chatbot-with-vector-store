@@ -89,10 +89,30 @@ llm = SagemakerEndpoint(
 
 ### Embedding
 
-[SageMaker Endpoint Embeddings](https://python.langchain.com/docs/integrations/text_embedding/sagemaker-endpoint)에 따라 아래와 같이 embedding을 정의합니다.
+[SageMaker Endpoint Embeddings](https://python.langchain.com/docs/integrations/text_embedding/sagemaker-endpoint)에 따라 아래와 같이 embedding을 정의합니다. 여기서 embedding용 SageMaker Endpoint인 endpoint_embedding는 SageMaker JumpStart에서 "GPT-J 6B Embedding FP1"을 설치한 후에 생성된 Endpoint입니다.
 
+```python
+from langchain.embeddings.sagemaker_endpoint import EmbeddingsContentHandler
+from typing import Dict, List
+class ContentHandler2(EmbeddingsContentHandler):
+    content_type = "application/json"
+    accepts = "application/json"
 
+    def transform_input(self, inputs: List[str], model_kwargs: Dict) -> bytes:
+        input_str = json.dumps({ "text_inputs": inputs, ** model_kwargs})
+        return input_str.encode("utf-8")
 
+    def transform_output(self, output: bytes) -> List[List[float]]:
+        response_json = json.loads(output.read().decode("utf-8"))
+        return response_json["embedding"]
+
+content_handler2 = ContentHandler2()
+embeddings = SagemakerEndpointEmbeddings(
+    endpoint_name = endpoint_embedding,
+    region_name = aws_region,
+    content_handler = content_handler2,
+)
+```
 ### 문서 읽어오기
 
 [Client](https://github.com/kyopark2014/question-answering-chatbot-with-vector-store/blob/main/html/chat.js)에서 Upload API로 아래와 같이 업로드할 파일명과 Content-Type을 전달합니다.
