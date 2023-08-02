@@ -3,9 +3,15 @@
 
 ## LLM과 Embedding Endpoint 설치하기
 
+### LLM
+
+SageMaker JumpStart에서 "Llama-2-7b-chat"를 고른후에 Deploy를 선택합니다. 설치가 되면 "jumpstart-dft-meta-textgeneration-llama-2-7b-f"와 같이 Endpoint가 생성됩니다.
+
+![noname](https://github.com/kyopark2014/Llama2-chatbot-with-vector-store/assets/52392004/f801809f-9ea2-46b2-932a-e0586283c814)
+
 ### Embedding
 
-SageMaker JumpStart에서 "GPT-J 6B Embedding FP1"를 선택하여 Deploy를 하면 설치가 됩니다. 설치가 되면 "jumpstart-dft-hf-textembedding-gpt-j-6b-fp16"와 같은 Endpoint가 생성됩니다.
+SageMaker JumpStart에서 "GPT-J 6B Embedding FP1"를 고른후에 Deploy를 선택합니다. 설치가 되면 "jumpstart-dft-hf-textembedding-gpt-j-6b-fp16"와 같이 Endpoint가 생성됩니다.
 
 ![noname](https://github.com/kyopark2014/Llama2-chatbot-with-vector-store/assets/52392004/80a24a19-3f28-4af0-b316-335df23f2bdf)
 
