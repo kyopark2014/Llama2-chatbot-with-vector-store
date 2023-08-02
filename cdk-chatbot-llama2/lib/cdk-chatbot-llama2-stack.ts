@@ -21,7 +21,8 @@ const bucketName = `storage-for-${projectName}`;
 let rag_type = "opensearch";  // faiss
 const opensearch_account = "admin";
 const opensearch_passwd = "Wifi1234!";
-const endpoint = 'jumpstart-dft-meta-textgeneration-llama-2-7b-f';
+const endpoint_llm = 'jumpstart-dft-meta-textgeneration-llama-2-7b-f';
+const endpoint_embedding = 'jumpstart-dft-hf-textembedding-gpt-j-6b-fp16';
 
 export class CdkChatbotLlama2Stack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -202,7 +203,8 @@ export class CdkChatbotLlama2Stack extends cdk.Stack {
         rag_type: rag_type,
         opensearch_account: opensearch_account,
         opensearch_passwd: opensearch_passwd,
-        endpoint: endpoint
+        endpoint_llm: endpoint_llm,
+        endpoint_embedding: endpoint_embedding
       }
     });     
     lambdaChatApi.grantInvoke(new iam.ServicePrincipal('apigateway.amazonaws.com'));  

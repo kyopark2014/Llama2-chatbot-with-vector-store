@@ -32,6 +32,8 @@ opensearch_account = os.environ.get('opensearch_account')
 opensearch_passwd = os.environ.get('opensearch_passwd')
 endpoint_name = os.environ.get('endpoint')
 enableRAGForFaiss = False   
+endpoint_llm = os.environ.get('endpoint_llm')
+endpoint_embedding = os.environ.get('endpoint_embedding')
 
 # initiate llm model based on langchain
 class ContentHandler(LLMContentHandler):
@@ -70,7 +72,7 @@ parameters = {
 } 
 
 llm = SagemakerEndpoint(
-    endpoint_name = endpoint_name, 
+    endpoint_name = endpoint_llm, 
     region_name = aws_region, 
     model_kwargs = parameters,
     endpoint_kwargs={"CustomAttributes": "accept_eula=true"},
@@ -85,20 +87,20 @@ class ContentHandler2(EmbeddingsContentHandler):
     accepts = "application/json"
 
     def transform_input(self, inputs: list[str], model_kwargs: Dict) -> bytes:
-        input_str = json.dumps({"inputs": inputs, **model_kwargs})
+        input_str = json.dumps({"text_inputs": inputs, **model_kwargs})
         return input_str.encode("utf-8")
 
     def transform_output(self, output: bytes) -> List[List[float]]:
         response_json = json.loads(output.read().decode("utf-8"))
-        return response_json["vectors"]
+        return response_json["embedding"]
 
-content_handler = ContentHandler2()
+content_handler2 = ContentHandler2()
 embeddings = SagemakerEndpointEmbeddings(
     # endpoint_name="endpoint-name",
     # credentials_profile_name="credentials-profile-name",
-    endpoint_name="huggingface-pytorch-inference-2023-03-21-16-14-03-834",
+    endpoint_name=endpoint_embedding,
     region_name="us-east-1",
-    content_handler=content_handler,
+    content_handler=content_handler2,
 )
 
 # load documents from s3
