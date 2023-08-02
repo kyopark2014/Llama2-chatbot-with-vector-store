@@ -247,7 +247,7 @@ vectorstore.add_documents(docs)
 }
 ```
 
-이것은 [cdk-qa-with-rag-stack.ts](./cdk-qa-with-rag/lib/cdk-qa-with-rag-stack.ts)에서 아래와 같이 구현할 수 있습니다.
+이것은 [cdk-chatbot-llama2-stack.ts](./cdk-chatbot-llama2/lib/cdk-chatbot-llama2-stack.ts)에서 아래와 같이 구현할 수 있습니다.
 
 ```typescript
 const resourceArn = `arn:aws:es:${region}:${accountId}:domain/${domainName}/*`
@@ -281,7 +281,7 @@ OpenSearch에 대한 access policy는 아래와 같습니다.
 }
 ```
 
-[cdk-qa-with-rag-stack.ts](./cdk-qa-with-rag/lib/cdk-qa-with-rag-stack.ts)에서 아래와 같이 정의하여 OpenSearch 생성시 활용합니다.
+[cdk-chatbot-llama2-stack.ts](./cdk-chatbot-llama2/lib/cdk-chatbot-llama2-stack.ts)에서 아래와 같이 정의하여 OpenSearch 생성시 활용합니다.
 
 ```typescript
 const resourceArn = `arn:aws:es:${region}:${accountId}:domain/${domainName}/*`
@@ -382,7 +382,7 @@ return result['result']
 
 ### AWS CDK로 인프라 구현하기
 
-[CDK 구현 코드](./ccdk-chatbot-llama2/README.md)에서는 Typescript로 인프라를 정의하는 방법에 대해 상세히 설명하고 있습니다.
+[CDK 구현 코드](./cdk-chatbot-llama2/README.md)에서는 Typescript로 인프라를 정의하는 방법에 대해 상세히 설명하고 있습니다.
 
 ## 직접 실습 해보기
 
