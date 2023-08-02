@@ -201,7 +201,7 @@ return docs
 
 ### Vector Store 
 
-Faiss와 OpenSearch 방식의 선택은 [cdk-qa-with-rag-stack.ts](./cdk-qa-with-rag/lib/cdk-qa-with-rag-stack.ts)에서 rag_type을 "faiss" 또는 "opensearch"로 변경할 수 있습니다. 기본값은 "opensearch"입니다.
+Faiss와 OpenSearch 방식의 선택은 [cdk-chatbot-llama2-stack.ts](./cdk-chatbot-llama2/lib/cdk-chatbot-llama2-stack.ts)에서 rag_type을 "faiss" 또는 "opensearch"로 변경할 수 있습니다. 기본값은 "opensearch"입니다.
 
 #### Faiss
 
