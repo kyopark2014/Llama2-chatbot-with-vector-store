@@ -103,7 +103,7 @@ const domain = new opensearch.Domain(this, 'Domain', {
     accessPolicies: [OpenSearchAccessPolicy],
     ebs: {
         volumeSize: 100,
-        volumeType: ec2.EbsDeviceVolumeType.GENERAL_PURPOSE_SSD,
+        volumeType: ec2.EbsDeviceVolumeType.GP3,
     },
     nodeToNodeEncryption: true,
     encryptionAtRest: {
@@ -117,28 +117,18 @@ const domain = new opensearch.Domain(this, 'Domain', {
 ```
 
 
-Bedrock 사용에 필요한 IAM Role을 생성합니다. Principal로 "bedrock.amazonaws.com"을 추가하였고, Policy로 action에 "bedrock:*"을 허용하였습니다.
+SageMaker 사용에 필요한 IAM Role을 생성합니다. 
 
 ```java
-const roleLambda = new iam.Role(this, `role-lambda-chat-for-${projectName}`, {
-    roleName: `role-lambda-chat-for-${projectName}`,
-    assumedBy: new iam.CompositePrincipal(
-        new iam.ServicePrincipal("lambda.amazonaws.com"),
-        new iam.ServicePrincipal("bedrock.amazonaws.com"),
-    )
-});
-roleLambda.addManagedPolicy({
-    managedPolicyArn: 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole',
-});
-const BedrockPolicy = new iam.PolicyStatement({  // policy statement for sagemaker
+const SageMakerPolicy = new iam.PolicyStatement({  // policy statement for sagemaker
+    actions: ['sagemaker:*'],
     resources: ['*'],
-    actions: ['bedrock:*'],
 });
-roleLambda.attachInlinePolicy( // add bedrock policy
-    new iam.Policy(this, `bedrock-policy-lambda-chat-for-${projectName}`, {
-        statements: [BedrockPolicy],
+lambdaChatApi.role?.attachInlinePolicy( // add sagemaker policy
+    new iam.Policy(this, `sagemaker-policy-for-${projectName}`, {
+        statements: [SageMakerPolicy],
     }),
-);      
+);
 ```
 
 Chat을 위한 Lambda를 설정합니다. 현재(2023년 7월) 기준으로 LangChain 라이브러리를 lambda에서 바로 실행할 수가 없어서, 컨테이너로 빌드하여 Lambda에서 수행합니다. Bedrock의 region name, endpoint url, model Id등을 파라미터로 제공합니다. 
