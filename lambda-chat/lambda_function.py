@@ -96,11 +96,9 @@ class ContentHandler2(EmbeddingsContentHandler):
 
 content_handler2 = ContentHandler2()
 embeddings = SagemakerEndpointEmbeddings(
-    # endpoint_name="endpoint-name",
-    # credentials_profile_name="credentials-profile-name",
-    endpoint_name=endpoint_embedding,
-    region_name="us-east-1",
-    content_handler=content_handler2,
+    endpoint_name = endpoint_embedding,
+    region_name = aws_region,
+    content_handler = content_handler2,
 )
 
 # load documents from s3
