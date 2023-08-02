@@ -45,21 +45,20 @@ chmod a+rx resize.sh && ./resize.sh 100
 4) 소스를 다운로드합니다.
 
 ```java
-git clone https://github.com/kyopark2014/question-answering-chatbot-with-vector-store
+git clone https://github.com/kyopark2014/Llama2-chatbot-with-vector-store
 ```
 
 5) cdk 폴더로 이동하여 필요한 라이브러리를 설치합니다.
 
 ```java
-cd question-answering-chatbot-with-vector-store/cdk-qa-with-rag/ && npm install
+cd Llama2-chatbot-with-vector-store/cdk-chatbot-llama2/ && npm install
 ```
 
-6) bedrock-sdk를 설치합니다.
+6) Enpoint들의 주소를 수정합니다.
 
-```java
-cd ../lambda-chat && wget https://preview.documentation.bedrock.aws.dev/Documentation/SDK/bedrock-python-sdk.zip
-unzip bedrock-python-sdk.zip -d bedrock-sdk && python3 -m pip install -U ./bedrock-sdk/boto3-1.26.162-py3-none-any.whl -t . && python3 -m pip install -U ./bedrock-sdk/awscli-1.27.162-py3-none-any.whl -t . && cd ../cdk-qa-with-rag/
-```
+
+
+
 
 6) CDK 사용을 위해 Boostraping을 수행합니다.
 
@@ -82,4 +81,4 @@ cdk deploy
 ```
 9) 설치가 완료되면 브라우저에서 아래와 같이 WebUrl를 확인하여 브라우저를 이용하여 접속합니다.
 
-![noname](https://github.com/kyopark2014/question-answering-chatbot-with-vector-store/assets/52392004/9833c547-f232-4d42-a604-79f2c0cdaef8)
+![noname](https://github.com/kyopark2014/Llama2-chatbot-with-vector-store/assets/52392004/9833c547-f232-4d42-a604-79f2c0cdaef8)
