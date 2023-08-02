@@ -54,7 +54,7 @@ git clone https://github.com/kyopark2014/Llama2-chatbot-with-vector-store
 cd Llama2-chatbot-with-vector-store/cdk-chatbot-llama2/ && npm install
 ```
 
-6) Enpoint들의 주소를 수정합니다.
+6) Enpoint들의 주소를 수정합니다. 
 
 
 
