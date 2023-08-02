@@ -46,6 +46,10 @@ class ContentHandler(LLMContentHandler):
             [
                 [
                     {
+                        "role" : "system",
+                        "content" : "You are a kind robot."
+                    },
+                    {
                         "role" : "user", 
                         "content" : prompt
                     }
