@@ -117,20 +117,6 @@ const domain = new opensearch.Domain(this, 'Domain', {
 ```
 
 
-SageMaker 사용에 필요한 IAM Role을 생성합니다. 
-
-```java
-const SageMakerPolicy = new iam.PolicyStatement({  // policy statement for sagemaker
-    actions: ['sagemaker:*'],
-    resources: ['*'],
-});
-lambdaChatApi.role?.attachInlinePolicy( // add sagemaker policy
-    new iam.Policy(this, `sagemaker-policy-for-${projectName}`, {
-        statements: [SageMakerPolicy],
-    }),
-);
-```
-
 Chat을 위한 Lambda를 설정합니다. 현재(2023년 7월) 기준으로 LangChain 라이브러리를 lambda에서 바로 실행할 수가 없어서, 컨테이너로 빌드하여 Lambda에서 수행합니다. Bedrock의 region name, endpoint url, model Id등을 파라미터로 제공합니다. 
 
 ```java
@@ -156,6 +142,21 @@ s3Bucket.grantRead(lambdaChatApi); // permission for s3
 callLogDataTable.grantReadWriteData(lambdaChatApi); // permission for dynamo
 configDataTable.grantReadWriteData(lambdaChatApi); // permission for dynamo
 ```
+
+SageMaker 사용에 필요한 IAM Role을 추가합니다. 
+
+```java
+const SageMakerPolicy = new iam.PolicyStatement({  // policy statement for sagemaker
+    actions: ['sagemaker:*'],
+    resources: ['*'],
+});
+lambdaChatApi.role?.attachInlinePolicy( // add sagemaker policy
+    new iam.Policy(this, `sagemaker-policy-for-${projectName}`, {
+        statements: [SageMakerPolicy],
+    }),
+);
+```
+
 
 Lambda가 외부와 연결하기 위하서는 API Gateway를 사용합니다. 아래와 같이 IAM Role과 API Gateway를 선언합니다. 
 
