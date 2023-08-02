@@ -56,7 +56,9 @@ cd Llama2-chatbot-with-vector-store/cdk-chatbot-llama2/ && npm install
 
 6) Enpoint들의 주소를 수정합니다. 
 
+LLM과 Embedding에 대한 Endpoint 생성시 얻은 주소로 아래와 같이 "cdk-chatbot-llama2/lib/cdk-chatbot-llama2-stack.ts"을 업데이트 합니다.
 
+![noname](https://github.com/kyopark2014/Llama2-chatbot-with-vector-store/assets/52392004/ab865bb2-7f1e-4abd-811d-867fab4d648d)
 
 
 
