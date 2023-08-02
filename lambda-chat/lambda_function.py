@@ -86,7 +86,7 @@ class ContentHandler2(EmbeddingsContentHandler):
     content_type = "application/json"
     accepts = "application/json"
 
-    def transform_input(self, inputs: list[str], model_kwargs: Dict) -> bytes:
+    def transform_input(self, inputs: List[str], model_kwargs: Dict) -> bytes:
         input_str = json.dumps({"text_inputs": inputs, **model_kwargs})
         return input_str.encode("utf-8")
 
