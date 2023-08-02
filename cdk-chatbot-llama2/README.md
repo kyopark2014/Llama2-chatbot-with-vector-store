@@ -143,7 +143,7 @@ callLogDataTable.grantReadWriteData(lambdaChatApi); // permission for dynamo
 configDataTable.grantReadWriteData(lambdaChatApi); // permission for dynamo
 ```
 
-SageMaker 사용에 필요한 IAM Role을 추가합니다. 
+SageMaker 사용에 필요한 권한을 추가합니다. 
 
 ```java
 const SageMakerPolicy = new iam.PolicyStatement({  // policy statement for sagemaker
