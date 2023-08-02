@@ -384,15 +384,18 @@ return result['result']
 
 채팅창에 "Tell me how to use ChatGPT in AWS."라고 입력합니다. 대규모 언어 모델은 가장 근사한 답을 찾아서 전달하므로 전형적인 환각(hallucination) 응답을 얻었습니다.
 
-[그림]
+![image](https://github.com/kyopark2014/Llama2-chatbot-with-vector-store/assets/52392004/19356593-2ea7-4d84-b2ab-705695735966)
+
 
 [gen-ai-aws.pdf](./gen-ai-aws.pdf)을 다운로드 한 후에 채팅창 아래의 파일 아이콘을 선택하여 업로드합니다. 업로드가 끝나면 아래와 같이 "gen-ai-aws.pdf"을 요약하여 보여줍니다.
 
-[그림]
+![image](https://github.com/kyopark2014/Llama2-chatbot-with-vector-store/assets/52392004/f9f136db-dffe-42ee-a33f-98a009915dc3)
+
 
 "gen-ai-aws.pdf"는 AWS의 Generative AI에 대한 정보를 가지고 있으므로, 동일한 질문을 했을때에 아래와 같이 이전과 다른 정확한 답변을 얻을 수 있습니다.
 
-[그림]
+![image](https://github.com/kyopark2014/Llama2-chatbot-with-vector-store/assets/52392004/c8710ee4-59ec-4cd8-848b-3ec40d7df081)
+
 
 
 
