@@ -60,7 +60,7 @@ cd Llama2-chatbot-with-vector-store/cdk-chatbot-llama2/ && npm install
 
 
 
-6) CDK 사용을 위해 Boostraping을 수행합니다.
+7) CDK 사용을 위해 Boostraping을 수행합니다.
 
 아래 명령어로 Account ID를 확인합니다.
 
