@@ -1,4 +1,16 @@
-# CDK를 이용한 인프라 설치하기
+# 설치하기
+
+
+## LLM과 Embedding Endpoint 설치하기
+
+### Embedding
+
+SageMaker JumpStart에서 "GPT-J 6B Embedding FP1"를 선택하여 Deploy를 하면 설치가 됩니다. 설치가 되면 "jumpstart-dft-hf-textembedding-gpt-j-6b-fp16"와 같은 Endpoint가 생성됩니다.
+
+![noname](https://github.com/kyopark2014/Llama2-chatbot-with-vector-store/assets/52392004/80a24a19-3f28-4af0-b316-335df23f2bdf)
+
+
+## CDK를 이용한 인프라 설치하기
 
 여기서는 [Cloud9](https://aws.amazon.com/ko/cloud9/)에서 [AWS CDK](https://aws.amazon.com/ko/cdk/)를 이용하여 인프라를 설치합니다.
 
