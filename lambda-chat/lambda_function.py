@@ -35,7 +35,6 @@ enableRAGForFaiss = False
 endpoint_llm = os.environ.get('endpoint_llm')
 endpoint_embedding = os.environ.get('endpoint_embedding')
 
-# initiate llm model based on langchain
 class ContentHandler(LLMContentHandler):
     content_type = "application/json"
     accepts = "application/json"
