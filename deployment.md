@@ -4,14 +4,13 @@
 ## LLM과 Embedding Endpoint 설치하기
 
 ### LLM
-
-SageMaker JumpStart에서 "Llama-2-7b-chat"를 고른후에 Deploy를 선택합니다. 설치가 되면 "jumpstart-dft-meta-textgeneration-llama-2-7b-f"와 같이 Endpoint가 생성됩니다.
+여기서는 Llama 2를 설치하기 위하여  SageMaker JumbStart에서 N. Virginia(us-east-1) 리전을 이용합니다. [SageMaker Console](https://us-east-1.console.aws.amazon.com/sagemaker/home?region=us-east-1#/studio)에서 SageMaker Studio를 실행한 후에, SageMaker JumpStart에서 "Llama-2-7b-chat"를 고른후에 Deploy를 선택합니다. 설치가 되면 "jumpstart-dft-meta-textgeneration-llama-2-7b-f"와 같이 Endpoint가 생성됩니다.
 
 ![noname](https://github.com/kyopark2014/Llama2-chatbot-with-vector-store/assets/52392004/f801809f-9ea2-46b2-932a-e0586283c814)
 
 ### Embedding
 
-SageMaker JumpStart에서 "GPT-J 6B Embedding FP1"를 고른후에 Deploy를 선택합니다. 설치가 되면 "jumpstart-dft-hf-textembedding-gpt-j-6b-fp16"와 같이 Endpoint가 생성됩니다.
+[SageMaker Console](https://us-east-1.console.aws.amazon.com/sagemaker/home?region=us-east-1#/studio)에서 SageMaker Studio를 실행한 후에, SageMaker JumpStart에서 "GPT-J 6B Embedding FP1"를 고른후에 Deploy를 선택합니다. 설치가 되면 "jumpstart-dft-hf-textembedding-gpt-j-6b-fp16"와 같이 Endpoint가 생성됩니다.
 
 ![noname](https://github.com/kyopark2014/Llama2-chatbot-with-vector-store/assets/52392004/80a24a19-3f28-4af0-b316-335df23f2bdf)
 
@@ -20,11 +19,11 @@ SageMaker JumpStart에서 "GPT-J 6B Embedding FP1"를 고른후에 Deploy를 선
 
 여기서는 [Cloud9](https://aws.amazon.com/ko/cloud9/)에서 [AWS CDK](https://aws.amazon.com/ko/cdk/)를 이용하여 인프라를 설치합니다.
 
-1) [Cloud9 Console](https://ap-northeast-2.console.aws.amazon.com/cloud9control/home?region=ap-northeast-2#/create)에 접속하여 [Create environment]-[Name]에서 “chatbot”으로 이름을 입력하고, EC2 instance는 “m5.large”를 선택합니다. 나머지는 기본값을 유지하고, 하단으로 스크롤하여 [Create]를 선택합니다.
+1) [Cloud9 Console](https://us-east-1.console.aws.amazon.com/cloud9control/home?region=us-east-1#/create)에 접속하여 [Create environment]-[Name]에서 “chatbot”으로 이름을 입력하고, EC2 instance는 “m5.large”를 선택합니다. 나머지는 기본값을 유지하고, 하단으로 스크롤하여 [Create]를 선택합니다.
 
 ![noname](https://github.com/kyopark2014/chatbot-based-on-Falcon-FM/assets/52392004/7c20d80c-52fc-4d18-b673-bd85e2660850)
 
-2) [Environment](https://ap-northeast-2.console.aws.amazon.com/cloud9control/home?region=ap-northeast-2#/)에서 “chatbot”를 [Open]한 후에 아래와 같이 터미널을 실행합니다.
+2) [Environment](https://us-east-1.console.aws.amazon.com/cloud9control/home?region=us-east-1#/)에서 “chatbot”를 [Open]한 후에 아래와 같이 터미널을 실행합니다.
 
 ![noname](https://github.com/kyopark2014/chatbot-based-on-Falcon-FM/assets/52392004/b7d0c3c0-3e94-4126-b28d-d269d2635239)
 
