@@ -61,7 +61,7 @@ LLM과 Embedding에 대한 Endpoint 생성시 얻은 주소로 아래와 같이 
 
 
 
-7) CDK 사용을 위해 Boostraping을 수행합니다.
+7) CDK 사용을 위해 Bootstraping을 수행합니다.
 
 아래 명령어로 Account ID를 확인합니다.
 
