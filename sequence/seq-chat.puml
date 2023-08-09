@@ -30,10 +30,9 @@ participant "<color:#red><$APIGateway>\nAmazon API Gateway" as api
 participant "<color:#D86613><$Lambda></color>\nAmazon Lambda\n(upload)" as lambdaUpload
 participant "<color:#green><$SimpleStorageServiceS3></color>\nAmazon S3" as s3
 participant "<color:#D86613><$Lambda></color>\nAmazon Lambda\n(chat)" as lambdaChat
-participant "<color:#green><$SageMaker></color>\nEmbedding" as embedding
 participant "<color:#D86613><$Database></color>\nVector Store" as vectorstore
 participant "<color:#green><$SageMaker></color>\nLLM" as llm
-
+participant "<color:#blue><$DynamoDB></color>\nDynamoDB" as dynamodb
 
 
 
@@ -43,9 +42,7 @@ cdn -> api: POST /chat (type='text')
 
 api -> lambdaChat ++ : Invokes lambda
 
-lambdaChat -> embedding ++: embedding
-
-embedding -> lambdaChat --: 200OK
+lambdaChat -> lambdaChat: Embedding
 
 lambdaChat -> vectorstore ++: similarity search
 
@@ -54,6 +51,9 @@ vectorstore -> lambdaChat --: related docs
 lambdaChat -> llm ++: question \nwith related docs
 
 llm -> lambdaChat --: 200OK (answer)
+
+lambdaChat -> dynamodb ++: Store call log
+dynamodb -> lambdaChat --: 200OK
 
 lambdaChat -> api --: 200OK (answer)
 
