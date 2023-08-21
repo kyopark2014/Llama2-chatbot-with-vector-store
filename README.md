@@ -402,26 +402,23 @@ return result['result']
 
 ### 실행결과
 
-채팅창에 "Tell me how to use ChatGPT in AWS."라고 입력합니다. 대규모 언어 모델은 가장 근사한 답을 찾아서 전달하므로 전형적인 환각(hallucination) 응답을 얻었습니다.
+채팅창에 "Tell me how to use language model for image detection on AWS."라고 입력합니다. 대규모 언어 모델은 가장 근사한 답을 찾아서 전달하므로 전형적인 환각(hallucination) 응답을 얻었습니다.
 
-![image](https://github.com/kyopark2014/Llama2-chatbot-with-vector-store/assets/52392004/19356593-2ea7-4d84-b2ab-705695735966)
-
-
-[gen-ai-aws.pdf](./gen-ai-aws.pdf)을 다운로드 한 후에 채팅창 아래의 파일 아이콘을 선택하여 업로드합니다. 업로드가 끝나면 아래와 같이 "gen-ai-aws.pdf"을 요약하여 보여줍니다.
-
-![image](https://github.com/kyopark2014/Llama2-chatbot-with-vector-store/assets/52392004/f9f136db-dffe-42ee-a33f-98a009915dc3)
+![noname](https://github.com/kyopark2014/Llama2-chatbot-with-vector-store/assets/52392004/386f1b04-022c-4234-b5d7-3e34f9ace3da)
 
 
-"gen-ai-aws.pdf"는 AWS의 Generative AI에 대한 정보를 가지고 있으므로, 동일한 질문을 했을때에 아래와 같이 이전과 다른 정확한 답변을 얻을 수 있습니다.
+[gen-ai-wiki.pdf](./gen-ai-wiki.pdf)을 다운로드 한 후에 채팅창 아래의 파일 아이콘을 선택하여 업로드합니다. 업로드가 끝나면 아래와 같이 "gen-ai-wiki.pdf"을 요약하여 보여줍니다.
 
-![image](https://github.com/kyopark2014/Llama2-chatbot-with-vector-store/assets/52392004/c8710ee4-59ec-4cd8-848b-3ec40d7df081)
+
+![noname](https://github.com/kyopark2014/Llama2-chatbot-with-vector-store/assets/52392004/fdaccc04-e719-48aa-9915-242a71a73f1f)
 
 
 
+"gen-ai-wiki.pdf"는 AWS의 Generative AI에 대한 정보를 가지고 있으므로, 동일한 질문을 했을때에 아래와 같이 이전과 다른 정확한 답변을 얻을 수 있습니다.
 
-한국어를 이해해서 영어로 답변하는 정도의 성능을 보여주고 있습니다.
+![noname](https://github.com/kyopark2014/Llama2-chatbot-with-vector-store/assets/52392004/eb5aa4f6-7e7f-4d06-8151-adff47712c71)
 
-![image](https://github.com/kyopark2014/Llama2-chatbot-using-langchain/assets/52392004/b31037d1-d580-4489-a8ad-2d50df6eb084)
+
 
 
 ### 리소스 정리하기
