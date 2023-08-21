@@ -65,9 +65,9 @@ content_handler = ContentHandler()
 aws_region = boto3.Session().region_name
 client = boto3.client("sagemaker-runtime")
 parameters = {
-    "max_new_tokens": 256, 
+    "max_new_tokens": 512, 
     "top_p": 0.9, 
-    "temperature": 0.6
+    "temperature": 0
 } 
 
 llm = SagemakerEndpoint(
