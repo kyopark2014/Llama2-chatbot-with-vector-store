@@ -89,7 +89,7 @@ llm = SagemakerEndpoint(
 
 ### Embedding
 
-[SageMaker Endpoint Embeddings](https://python.langchain.com/docs/integrations/text_embedding/sagemaker-endpoint)에 따라 아래와 같이 embedding을 정의합니다. 여기서 embedding용 SageMaker Endpoint인 endpoint_embedding는 SageMaker JumpStart에서 "GPT-J 6B Embedding FP1"을 설치한 후에 생성된 Endpoint입니다.
+[SageMaker Endpoint Embeddings](https://python.langchain.com/docs/integrations/text_embedding/sagemaker-endpoint)에 따라 아래와 같이 embedding을 정의합니다. 여기서 embedding용 SageMaker Endpoint인 endpoint_embedding는 SageMaker JumpStart에서 "GPT-J 6B Embedding FP16"을 설치한 후에 생성된 Endpoint입니다.
 
 ```python
 from langchain.embeddings.sagemaker_endpoint import EmbeddingsContentHandler
