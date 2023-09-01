@@ -21,6 +21,8 @@ from langchain.indexes.vectorstore import VectorStoreIndexWrapper
 from langchain.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
 from langchain.embeddings import SagemakerEndpointEmbeddings
+from langchain.chains import ConversationalRetrievalChain
+from langchain.memory import ConversationBufferMemory
 
 s3 = boto3.client('s3')
 s3_bucket = os.environ.get('s3_bucket') # bucket name
@@ -31,9 +33,14 @@ rag_type = os.environ.get('rag_type')
 opensearch_account = os.environ.get('opensearch_account')
 opensearch_passwd = os.environ.get('opensearch_passwd')
 endpoint_name = os.environ.get('endpoint')
-enableRAGForFaiss = False   
+isReady = False   
 endpoint_llm = os.environ.get('endpoint_llm')
 endpoint_embedding = os.environ.get('endpoint_embedding')
+
+enableConversationMode = os.environ.get('enableConversationMode', 'enabled')
+print('enableConversationMode: ', enableConversationMode)
+enableReference = os.environ.get('enableReference', 'false')
+enableRAG = os.environ.get('enableRAG', 'true')
 
 class ContentHandler(LLMContentHandler):
     content_type = "application/json"
@@ -77,6 +84,12 @@ llm = SagemakerEndpoint(
     endpoint_kwargs={"CustomAttributes": "accept_eula=true"},
     content_handler = content_handler
 )
+
+# memory for retrival docs
+memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True, input_key="question", output_key='answer', human_prefix='Human', ai_prefix='AI')
+
+# memory for conversation
+chat_memory = ConversationBufferMemory(human_prefix='Human', ai_prefix='AI')
 
 # embedding
 from langchain.embeddings.sagemaker_endpoint import EmbeddingsContentHandler
@@ -130,7 +143,69 @@ def load_document(file_type, s3_file_name):
     print('texts[0]: ', texts[0])
             
     return texts
-              
+
+def get_reference(docs):
+    reference = "\n\nFrom\n"
+    for doc in docs:
+        name = doc.metadata['title']
+        page = doc.metadata['document_attributes']['_excerpt_page_number']
+    
+        reference = reference + (str(page)+'page in '+name+'\n')
+    return reference
+
+def get_answer_using_template_with_history(query, chat_memory):  
+    condense_template = """Given the following conversation and a follow up question, answer friendly. If you don't know the answer, just say that you don't know, don't try to make up an answer.
+    Chat History:
+    {chat_history}
+    Human: {question}
+    AI:"""
+    CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template(condense_template)
+    
+    qa = ConversationalRetrievalChain.from_llm(
+        llm=llm, 
+        retriever=vectorstore.as_retriever(
+            search_type="similarity", search_kwargs={"k": 3}
+        ),         
+        condense_question_prompt=CONDENSE_QUESTION_PROMPT, # chat history and new question
+        chain_type='stuff', # 'refine'
+        verbose=False, # for logging to stdout
+        rephrase_question=True,  # to pass the new generated question to the combine_docs_chain
+        
+        memory=memory,
+        #max_tokens_limit=300,
+        return_source_documents=True, # retrieved source
+        return_generated_question=False, # generated question
+    )
+
+    # combine any retrieved documents.
+    prompt_template = """Human: Use the following pieces of context to provide a concise answer to the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer.
+
+    {context}
+
+    Question: {question}
+    AI:"""
+    qa.combine_docs_chain.llm_chain.prompt = PromptTemplate.from_template(prompt_template) 
+    
+    # extract chat history
+    chats = chat_memory.load_memory_variables({})
+    chat_history = chats['history']
+    print('chat_history: ', chat_history)
+
+    # make a question using chat history
+    result = qa({"question": query, "chat_history": chat_history})    
+    print('result: ', result)    
+    
+    # get the reference
+    source_documents = result['source_documents']
+    print('source_documents: ', source_documents)
+
+    if len(source_documents)>=1 and enableReference == 'true':
+        reference = get_reference(source_documents)
+        #print('reference: ', reference)
+        return result['answer']+reference
+    else:
+        return result['answer']
+
 def get_answer_using_query(query, vectorstore, rag_type):
     wrapper_store = VectorStoreIndexWrapper(vectorstore=vectorstore)
     
@@ -201,7 +276,8 @@ def lambda_handler(event, context):
     body = event['body']
     print('body: ', body)
 
-    global llm, vectorstore, enableRAGForFaiss
+    global llm, vectorstore, isReady
+    global enableConversationMode, enableReference, enableRAG  # debug
     
     if rag_type == 'opensearch':
         vectorstore = OpenSearchVectorSearch(
@@ -213,7 +289,7 @@ def lambda_handler(event, context):
             http_auth=(opensearch_account, opensearch_passwd),
         )
     elif rag_type == 'faiss':
-        print('enableRAGForFaiss = ', enableRAGForFaiss)
+        print('isReady = ', isReady)
    
     start = int(time.time())    
 
@@ -222,11 +298,44 @@ def lambda_handler(event, context):
     if type == 'text':
         text = body
 
-        if rag_type == 'faiss' and enableRAGForFaiss == False: 
-            msg = llm(text)
-        else: 
-            msg = get_answer_using_template(text, vectorstore, rag_type)
-        print('msg: ', msg)
+        # debugging
+        if text == 'enableReference':
+            enableReference = 'true'
+            msg  = "Referece is enabled"
+        elif text == 'disableReference':
+            enableReference = 'false'
+            msg  = "Reference is disabled"
+        elif text == 'enableConversationMode':
+            enableConversationMode = 'true'
+            msg  = "Conversation mode is enabled"
+        elif text == 'disableConversationMode':
+            enableConversationMode = 'false'
+            msg  = "Conversation mode is disabled"
+        elif text == 'enableRAG':
+            enableRAG = 'true'
+            msg  = "RAG is enabled"
+        elif text == 'disableRAG':
+            enableRAG = 'false'
+            msg  = "RAG is disabled"
+        else:
+
+
+            if rag_type == 'faiss' and isReady == False: 
+                msg = llm(text)
+            else: 
+                querySize = len(text)
+                textCount = len(text.split())
+                print(f"query size: {querySize}, workds: {textCount}")
+                
+                if querySize<1800 and enableRAG=='true': # max 1985
+                    if enableConversationMode == 'true':
+                        msg = get_answer_using_template_with_history(text, vectorstore, chat_memory)
+                        chat_memory.save_context({"input": text}, {"output": msg})
+                    else:
+                        msg = get_answer_using_template(text, vectorstore, rag_type)
+                else:
+                    msg = llm(text)
+            #print('msg: ', msg)
             
     elif type == 'document':
         object = body
@@ -252,12 +361,12 @@ def lambda_handler(event, context):
         print('docs size: ', len(docs))
 
         if rag_type == 'faiss':
-            if enableRAGForFaiss == False:                    
+            if isReady == False:                    
                 vectorstore = FAISS.from_documents( # create vectorstore from a document
                     docs,  # documents
                     embeddings  # embeddings
                 )
-                enableRAGForFaiss = True                    
+                isReady = True                    
             else:                             
                 vectorstore.add_documents(docs)
                 print('vector store size: ', len(vectorstore.docstore._dict))

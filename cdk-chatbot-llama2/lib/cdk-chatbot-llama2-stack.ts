@@ -23,6 +23,9 @@ const opensearch_account = "admin";
 const opensearch_passwd = "Wifi1234!";
 const endpoint_llm = 'jumpstart-dft-meta-textgeneration-llama-2-7b-f';
 const endpoint_embedding = 'jumpstart-dft-hf-textembedding-gpt-j-6b-fp16';
+const enableConversationMode = 'ture';
+const enableReference = 'false';
+const enableRAG = 'true';
 
 export class CdkChatbotLlama2Stack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -204,7 +207,10 @@ export class CdkChatbotLlama2Stack extends cdk.Stack {
         opensearch_account: opensearch_account,
         opensearch_passwd: opensearch_passwd,
         endpoint_llm: endpoint_llm,
-        endpoint_embedding: endpoint_embedding
+        endpoint_embedding: endpoint_embedding,
+        enableConversationMode: enableConversationMode,
+        enableReference: enableReference,
+        enableRAG: enableRAG
       }
     });     
     lambdaChatApi.grantInvoke(new iam.ServicePrincipal('apigateway.amazonaws.com'));  
