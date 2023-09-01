@@ -319,7 +319,6 @@ def lambda_handler(event, context):
             msg  = "RAG is disabled"
         else:
 
-
             if rag_type == 'faiss' and isReady == False: 
                 msg = llm(text)
             else: 
