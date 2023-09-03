@@ -154,7 +154,7 @@ def get_reference(docs):
     return reference
 
 def get_answer_using_template_with_history(query, vectorstore, chat_memory):  
-    condense_template = """Given the following conversation and a follow up question, answer friendly. If you don't know the answer, just say that you don't know, don't try to make up an answer.
+    condense_template = """Given the following conversation and a follow up question, answer friendly for the last question. If you don't know the answer, just say that you don't know, don't try to make up an answer.
     Chat History:
     {chat_history}
     Human: {question}
