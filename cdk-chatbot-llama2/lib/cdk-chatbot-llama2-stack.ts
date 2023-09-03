@@ -23,7 +23,7 @@ const opensearch_account = "admin";
 const opensearch_passwd = "Wifi1234!";
 const endpoint_llm = 'jumpstart-dft-meta-textgeneration-llama-2-7b-f';
 const endpoint_embedding = 'jumpstart-dft-hf-textembedding-gpt-j-6b-fp16';
-const enableConversationMode = 'ture';
+const enableConversationMode = 'true';
 const enableReference = 'false';
 const enableRAG = 'true';
 
@@ -33,7 +33,7 @@ export class CdkChatbotLlama2Stack extends cdk.Stack {
 
     // s3 
     const s3Bucket = new s3.Bucket(this, `storage-${projectName}`,{
-      // bucketName: bucketName,
+      bucketName: bucketName,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
