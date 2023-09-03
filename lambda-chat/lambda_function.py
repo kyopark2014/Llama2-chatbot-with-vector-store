@@ -32,7 +32,6 @@ opensearch_url = os.environ.get('opensearch_url')
 rag_type = os.environ.get('rag_type')
 opensearch_account = os.environ.get('opensearch_account')
 opensearch_passwd = os.environ.get('opensearch_passwd')
-endpoint_name = os.environ.get('endpoint')
 isReady = False   
 endpoint_llm = os.environ.get('endpoint_llm')
 endpoint_embedding = os.environ.get('endpoint_embedding')
