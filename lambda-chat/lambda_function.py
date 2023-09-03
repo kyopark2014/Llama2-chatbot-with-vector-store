@@ -153,7 +153,7 @@ def get_reference(docs):
         reference = reference + (str(page)+'page in '+name+'\n')
     return reference
 
-def get_answer_using_template_with_history(query, chat_memory):  
+def get_answer_using_template_with_history(query, vectorstore, chat_memory):  
     condense_template = """Given the following conversation and a follow up question, answer friendly. If you don't know the answer, just say that you don't know, don't try to make up an answer.
     Chat History:
     {chat_history}
