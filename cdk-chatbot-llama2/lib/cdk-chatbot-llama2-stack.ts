@@ -143,7 +143,7 @@ export class CdkChatbotLlama2Stack extends cdk.Stack {
         },
         zoneAwareness: {
           enabled: true,
-          availabilityZoneCount: 2,        
+          availabilityZoneCount: 3,        
         }
       });
       new cdk.CfnOutput(this, `Domain-of-OpenSearch-for-${projectName}`, {
