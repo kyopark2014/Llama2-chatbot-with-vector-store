@@ -124,10 +124,10 @@ export class CdkChatbotLlama2Stack extends cdk.Stack {
           masterUserPassword:cdk.SecretValue.unsafePlainText(opensearch_passwd)
         },
         capacity: {
-          masterNodes: 3,
+          masterNodes: 2,
           masterNodeInstanceType: 'm6g.large.search',
           // multiAzWithStandbyEnabled: false,
-          dataNodes: 3,
+          dataNodes: 2,
           dataNodeInstanceType: 'r6g.large.search',        
           // warmNodes: 2,
           // warmInstanceType: 'ultrawarm1.medium.search',
@@ -143,7 +143,7 @@ export class CdkChatbotLlama2Stack extends cdk.Stack {
         },
         zoneAwareness: {
           enabled: true,
-          availabilityZoneCount: 3,        
+          availabilityZoneCount: 2,        
         }
       });
       new cdk.CfnOutput(this, `Domain-of-OpenSearch-for-${projectName}`, {
