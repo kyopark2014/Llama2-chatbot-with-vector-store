@@ -124,10 +124,10 @@ export class CdkChatbotLlama2Stack extends cdk.Stack {
           masterUserPassword:cdk.SecretValue.unsafePlainText(opensearch_passwd)
         },
         capacity: {
-          masterNodes: 2,
+          masterNodes: 3,
           masterNodeInstanceType: 'm6g.large.search',
           // multiAzWithStandbyEnabled: false,
-          dataNodes: 2,
+          dataNodes: 3,
           dataNodeInstanceType: 'r6g.large.search',        
           // warmNodes: 2,
           // warmInstanceType: 'ultrawarm1.medium.search',
