@@ -23,7 +23,7 @@ const opensearch_account = "admin";
 const opensearch_passwd = "Wifi1234!";
 const endpoint_llm = 'jumpstart-dft-meta-textgeneration-llama-2-7b-f';
 const endpoint_embedding = 'jumpstart-dft-hf-textembedding-gpt-j-6b-fp16';
-const enableConversationMode = 'false';
+const enableConversationMode = 'true';
 const enableReference = 'false';
 const enableRAG = 'true';
 
