@@ -78,7 +78,7 @@ parameters = {
     "top_p": 0.9, 
     "temperature": 0.1
 } 
-HUMAN_PROMPT = "\n\nHuman:"
+HUMAN_PROMPT = "\n\nUser:"
 AI_PROMPT = "\n\nAssistant:"
 
 llm = SagemakerEndpoint(
@@ -187,14 +187,14 @@ def get_summary(texts):
     print('word_kor: ', word_kor)
     
     if word_kor:
-        #prompt_template = """\n\nHuman: 다음 텍스트를 간결하게 요약하세오. 텍스트의 요점을 다루는 글머리 기호로 응답을 반환합니다.
-        prompt_template = """\n\nHuman: 다음 텍스트를 요약해서 500자 이내로 설명하세오.
+        #prompt_template = """\n\nUser: 다음 텍스트를 간결하게 요약하세오. 텍스트의 요점을 다루는 글머리 기호로 응답을 반환합니다.
+        prompt_template = """\n\nUser: 다음 텍스트를 요약해서 500자 이내로 설명하세오.
 
         {text}
         
         Assistant:"""        
     else:         
-        prompt_template = """\n\nHuman: Write a concise summary of the following:
+        prompt_template = """\n\nUser: Write a concise summary of the following:
 
         {text}
         
@@ -225,11 +225,11 @@ def get_answer_using_template_with_history(query, vectorstore, chat_memory):
     print('word_kor: ', word_kor)
     
     if word_kor:
-        condense_template = """\n\nHuman: 다음은 Human과 Assistant의 친근한 대화입니다. Assistant은 상황에 맞는 구체적인 세부 정보를 충분히 제공합니다. Assistant는 모르는 질문을 받으면 솔직히 모른다고 말합니다.
+        condense_template = """\n\nUser: 다음은 User와 Assistant의 친근한 대화입니다. Assistant은 상황에 맞는 구체적인 세부 정보를 충분히 제공합니다. Assistant는 모르는 질문을 받으면 솔직히 모른다고 말합니다.
     
         {chat_history}
         
-        Human: {question}
+        User: {question}
 
         Assistant:"""
     else:
@@ -237,7 +237,7 @@ def get_answer_using_template_with_history(query, vectorstore, chat_memory):
         
         {chat_history}
         
-        Human: {question}
+        User: {question}
 
         Assistant:"""
     CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template(condense_template)     
@@ -271,7 +271,7 @@ def get_answer_using_template_with_history(query, vectorstore, chat_memory):
         body = rel_doc.page_content[rel_doc.page_content.rfind('Document Excerpt:')+18:len(rel_doc.page_content)]
         # print('body: ', body)
         
-        chat_history = f"{chat_history}\nHuman: {body}"  # append relevant_documents 
+        chat_history = f"{chat_history}\User: {body}"  # append relevant_documents 
         print(f'## Document {i+1}: {rel_doc.page_content}')
         print('---')
 
@@ -295,7 +295,7 @@ def get_answer_using_template_with_history(query, vectorstore, chat_memory):
 
 # We are also providing a different chat history retriever which outputs the history as a Claude chat (ie including the \n\n)
 from langchain.schema import BaseMessage
-_ROLE_MAP = {"human": "\n\nHuman: ", "ai": "\n\nAssistant: "}
+_ROLE_MAP = {"human": "\n\nUser: ", "ai": "\n\nAssistant: "}
 def _get_chat_history(chat_history):
     buffer = ""
     for dialogue_turn in chat_history:
@@ -303,7 +303,7 @@ def _get_chat_history(chat_history):
             role_prefix = _ROLE_MAP.get(dialogue_turn.type, f"{dialogue_turn.type}: ")
             buffer += f"\n{role_prefix}{dialogue_turn.content}"
         elif isinstance(dialogue_turn, tuple):
-            human = "\n\nHuman: " + dialogue_turn[0]
+            human = "\n\nUser: " + dialogue_turn[0]
             ai = "\n\nAssistant: " + dialogue_turn[1]
             buffer += "\n" + "\n".join([human, ai])
         else:
@@ -320,7 +320,7 @@ def create_ConversationalRetrievalChain(vectorstore):
     
     #{chat_history}
     
-    #Human: {question}
+    #User: {question}
 
     #Assistant:"""
     condense_template = """To create condense_question, given the following conversation and a follow up question, rephrase the follow up question to be a standalone question, in its original language.
@@ -332,7 +332,7 @@ def create_ConversationalRetrievalChain(vectorstore):
     CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template(condense_template)
 
     # combine any retrieved documents.
-    #qa_prompt_template = """\n\nHuman: Use the following pieces of context to provide a concise answer to the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer.
+    #qa_prompt_template = """\n\nUser: Use the following pieces of context to provide a concise answer to the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer.
 
     #{context}
 
@@ -340,7 +340,7 @@ def create_ConversationalRetrievalChain(vectorstore):
     
     #Assistant:"""    
     
-    qa_prompt_template = """\n\nHuman:
+    qa_prompt_template = """\n\nUser:
     Here is the context, inside <context></context> XML tags.    
     Based on the context as below, answer the question. If you don't know the answer, just say that you don't know, don't try to make up an answer.
 
@@ -348,7 +348,7 @@ def create_ConversationalRetrievalChain(vectorstore):
     {context}
     </context>
 
-    Human: Use at maximum 5 sentences to answer the following question.
+    User: Use at maximum 5 sentences to answer the following question.
     {question}
 
     If the answer is not in the context, say "I don't know"
@@ -425,7 +425,7 @@ def get_answer_using_template(query, vectorstore, rag_type):
     print('word_kor: ', word_kor)
     
     if word_kor:
-        prompt_template = """\n\nHuman: 다음은 Human과 Assistant의 친근한 대화입니다. Assistant은 상황에 맞는 구체적인 세부 정보를 충분히 제공합니다. Assistant는 모르는 질문을 받으면 솔직히 모른다고 말합니다.
+        prompt_template = """\n\nUser: 다음은 User과 Assistant의 친근한 대화입니다. Assistant은 상황에 맞는 구체적인 세부 정보를 충분히 제공합니다. Assistant는 모르는 질문을 받으면 솔직히 모른다고 말합니다.
     
         {context}
         
@@ -433,7 +433,7 @@ def get_answer_using_template(query, vectorstore, rag_type):
 
         Assistant:"""
     else:
-        prompt_template = """\n\nHuman: Using the following conversation, answer friendly for the newest question. If you don't know the answer, just say that you don't know, don't try to make up an answer. You will be acting as a thoughtful advisor.
+        prompt_template = """\n\nUser: Using the following conversation, answer friendly for the newest question. If you don't know the answer, just say that you don't know, don't try to make up an answer. You will be acting as a thoughtful advisor.
         
         {context}
 
@@ -495,7 +495,7 @@ def lambda_handler(event, context):
         chat_memory = map[userId]
         print('chat_memory exist. reuse it!')
     else: 
-        chat_memory = ConversationBufferMemory(human_prefix='Human', ai_prefix='Assistant')
+        chat_memory = ConversationBufferMemory(human_prefix='User', ai_prefix='Assistant')
         map[userId] = chat_memory
         print('chat_memory does not exist. create new one!')
     
