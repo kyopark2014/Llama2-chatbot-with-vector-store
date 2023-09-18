@@ -387,7 +387,8 @@ def get_answer_using_chat_history_and_Llama2_template(query, vectorstore, chat_m
     if chat_history.find('User: ') >= 0:
         chat_history = chat_history[chat_history.find('User: '):len(chat_history)]
 
-        history = get_history(chat_history)        
+        history = get_history(chat_history)     
+        print('history: ', history)     
 
     # load related docs
     relevant_documents = vectorstore.similarity_search(query)
@@ -403,8 +404,6 @@ def get_answer_using_chat_history_and_Llama2_template(query, vectorstore, chat_m
         relevant_txt = relevant_txt + {body} +'\n'  # append relevant_documents 
         print(f'## Document {i+1}: {rel_doc.page_content}')
         print('---')
-
-    print('history: ', history)     
 
     # make a question using chat history
     if pages >= 1:
