@@ -42,7 +42,29 @@ print('enableConversationMode: ', enableConversationMode)
 enableReference = os.environ.get('enableReference', 'false')
 enableRAG = os.environ.get('enableRAG', 'true')
 
-conversationMothod = 'PromptTemplate' # ConversationalRetrievalChain or PromptTemplate
+methodOfConversation = 'PromptTemplate' # ConversationalRetrievalChain or PromptTemplate
+typeOfHistoryTemplate = 'Llama2' # Llam2 or Basic
+
+# Prompt Template
+HUMAN_PROMPT = "\n\nUser:"
+AI_PROMPT = "\n\nAssistant:"
+
+system_prompt = """You are a helpful, respectful and honest assistant. Always answer as helpfully as possible, while being safe.  Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Please ensure that your responses are socially unbiased and positive in nature.
+
+If a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct. If you don't know the answer to a question, please don't share false information."""
+
+Llama2_BASIC_PROMPT = """<s>[INST] <<SYS>>
+{system_prompt}
+<</SYS>>
+
+{question} [/INST]"""
+
+Llama2_HISTORY_PROMPT = """<s>[INST] <<SYS>>
+{system_prompt}
+<</SYS>>
+
+{chat_history}
+<s>[INST] {relevant_docs}\n {question} [/INST]"""
 
 class ContentHandler(LLMContentHandler):
     content_type = "application/json"
@@ -78,8 +100,6 @@ parameters = {
     "top_p": 0.9, 
     "temperature": 0.1
 } 
-HUMAN_PROMPT = "\n\nUser:"
-AI_PROMPT = "\n\nAssistant:"
 
 llm = SagemakerEndpoint(
     endpoint_name = endpoint_llm, 
@@ -248,7 +268,11 @@ def get_answer_using_template_with_history(query, vectorstore, chat_memory):
     print('chat_history_all: ', chat_history_all)
 
     # use last two chunks of chat history
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=2000,chunk_overlap=0)
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=4000,
+        chunk_overlap=0,
+        separators=["\n\n", "\n", ".", " ", ""],
+        length_function = len)
     texts = text_splitter.split_text(chat_history_all) 
 
     pages = len(texts)
@@ -292,6 +316,108 @@ def get_answer_using_template_with_history(query, vectorstore, chat_memory):
         return result+reference
     else:
         return result
+
+def get_history(history):
+    msg_history = ""
+
+    # first message
+    if history.find('User: ')>=0:
+        userMsg = history[history.find('User: ')+6:history.find('Assistant: ')]
+        #print('userMsg: ', userMsg)
+        history = history[history.find('Assistant: ')+11:len(history)]
+
+        if history.find('User: ')>=0:
+            assistantMsg = history[0:history.find('User: ')]
+            #print('assistantMsg: ', assistantMsg)
+            history = history[history.find('User: '):len(history)]
+        else:
+            assistantMsg = history[0:len(history)]
+            #print('assistantMsg: ', assistantMsg)            
+        
+        msg_history = userMsg + ' [/INST] '
+        msg_history = msg_history + assistantMsg + ' </s>'    
+        #print('first history: ', msg_history)
+    
+    while history.find('User: ')>=0:
+        userMsg = history[history.find('User: ')+6:history.find('Assistant: ')]
+        #print('userMsg: ', userMsg)
+        history = history[history.find('Assistant: ')+11:len(history)]
+
+        if history.find('User: ')>=0:
+            assistantMsg = history[0:history.find('User: ')]
+            #print('assistantMsg: ', assistantMsg)
+            history = history[history.find('User: '):len(history)]
+        else:
+            assistantMsg = history[0:len(history)]
+            #print('assistantMsg: ', assistantMsg)            
+        
+        msg_history = msg_history + '<s>[INST] ' + userMsg + ' [/INST] '
+        msg_history = msg_history + assistantMsg + ' </s>'    
+    
+    #print('full history: ', msg_history)
+    return  msg_history
+
+def get_answer_using_chat_history_and_Llama2_template(query, vectorstore, chat_memory):  
+    CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template(Llama2_HISTORY_PROMPT)
+        
+    # extract chat history
+    chats = chat_memory.load_memory_variables({})
+    chat_history_all = chats['history']
+    print('chat_history_all: ', chat_history_all)
+
+    # use last two chunks of chat history
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=4000,
+        chunk_overlap=0,
+        separators=["\n\n", "\n", ".", " ", ""],
+        length_function = len)
+    texts = text_splitter.split_text(chat_history_all) 
+
+    pages = len(texts)
+    print('pages: ', pages)
+
+    if pages >= 2:
+        chat_history = f"{texts[pages-2]} {texts[pages-1]}"
+    elif pages == 1:
+        chat_history = texts[0]
+    else:  # 0 page
+        chat_history = ""
+    print('chat_history:\n ', chat_history)
+
+    if chat_history.find('User: ') >= 0:
+        chat_history = chat_history[chat_history.find('User: '):len(chat_history)]
+
+        history = get_history(chat_history)        
+
+    # load related docs
+    relevant_documents = vectorstore.similarity_search(query)
+    #print('relevant_documents: ', relevant_documents)
+
+    relevant_txt = ""
+    print(f'{len(relevant_documents)} documents are fetched which are relevant to the query.')
+    print('----')
+    for i, rel_doc in enumerate(relevant_documents):
+        body = rel_doc.page_content[rel_doc.page_content.rfind('Document Excerpt:')+18:len(rel_doc.page_content)]
+        # print('body: ', body)
+        
+        relevant_txt = relevant_txt + {body} +'\n'  # append relevant_documents 
+        print(f'## Document {i+1}: {rel_doc.page_content}')
+        print('---')
+
+    print('history: ', history)     
+
+    # make a question using chat history
+    if pages >= 1:
+        result = llm(CONDENSE_QUESTION_PROMPT.format(
+            question=query, 
+            system_prompt=system_prompt,
+            chat_history=history, 
+            relevant_docs=relevant_txt))
+    else:
+        result = llm(query)        
+    #print('result: ', result)
+
+    return result    
 
 # We are also providing a different chat history retriever which outputs the history as a Claude chat (ie including the \n\n)
 from langchain.schema import BaseMessage
@@ -548,8 +674,11 @@ def lambda_handler(event, context):
                 
                 if querySize<1800 and enableRAG=='true': # max 1985
                     if enableConversationMode == 'true':
-                        if conversationMothod == 'PromptTemplate':
-                            msg = get_answer_using_template_with_history(text, vectorstore, chat_memory)
+                        if methodOfConversation == 'PromptTemplate':                            
+                            if typeOfHistoryTemplate == "Llama2":
+                                msg = get_answer_using_chat_history_and_Llama2_template(text, vectorstore, chat_memory)
+                            else:
+                                msg = get_answer_using_template_with_history(text, vectorstore, chat_memory)
                                                               
                             storedMsg = str(msg).replace("\n"," ") 
                             chat_memory.save_context({"input": text}, {"output": storedMsg})                  
