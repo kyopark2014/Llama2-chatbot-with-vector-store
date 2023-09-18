@@ -64,7 +64,9 @@ Llama2_HISTORY_PROMPT = """<s>[INST] <<SYS>>
 <</SYS>>
 
 {chat_history}
-<s>[INST] {relevant_docs}\n {question} [/INST]"""
+
+<s>[INST] {relevant_docs} [/INST]
+<s>[INST] {question} [/INST]"""
 
 class ContentHandler(LLMContentHandler):
     content_type = "application/json"
