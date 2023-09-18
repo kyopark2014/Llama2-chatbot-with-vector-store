@@ -43,7 +43,7 @@ enableReference = os.environ.get('enableReference', 'false')
 enableRAG = os.environ.get('enableRAG', 'true')
 
 methodOfConversation = 'PromptTemplate' # ConversationalRetrievalChain or PromptTemplate
-typeOfHistoryTemplate = 'Basic' # Llam2 or Basic
+typeOfHistoryTemplate = 'Llam2' # Llam2 or Basic
 
 # Prompt Template
 HUMAN_PROMPT = "\n\nUser:"
@@ -65,7 +65,7 @@ Llama2_HISTORY_PROMPT = """<s>[INST] <<SYS>>
 
 {chat_history}
 
-<s>[INST] {relevant_docs} [/INST]
+<<SYS>> {relevant_docs} <</SYS>>
 <s>[INST] {question} [/INST]"""
 
 class ContentHandler(LLMContentHandler):
