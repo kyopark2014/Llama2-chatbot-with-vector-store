@@ -43,7 +43,7 @@ enableReference = os.environ.get('enableReference', 'false')
 enableRAG = os.environ.get('enableRAG', 'true')
 
 methodOfConversation = 'PromptTemplate' # ConversationalRetrievalChain or PromptTemplate
-typeOfHistoryTemplate = 'Llama2' # Llam2 or Basic
+typeOfHistoryTemplate = 'Basic' # Llam2 or Basic
 
 # Prompt Template
 HUMAN_PROMPT = "\n\nUser:"
