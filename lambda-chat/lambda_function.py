@@ -401,7 +401,7 @@ def get_answer_using_chat_history_and_Llama2_template(query, vectorstore, chat_m
         body = rel_doc.page_content[rel_doc.page_content.rfind('Document Excerpt:')+18:len(rel_doc.page_content)]
         # print('body: ', body)
         
-        relevant_txt = relevant_txt + {body} +'\n'  # append relevant_documents 
+        relevant_txt = relevant_txt + body +'\n'  # append relevant_documents 
         print(f'## Document {i+1}: {rel_doc.page_content}')
         print('---')
 
