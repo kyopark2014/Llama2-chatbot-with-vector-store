@@ -602,13 +602,39 @@ def get_reference(docs):
     
         reference = reference + (str(page)+'page in '+name+'\n')
     return reference
-        
+
+def load_chatHistory(userId, allowTime, chat_memory):
+    dynamodb_client = boto3.client('dynamodb')
+
+    response = dynamodb_client.query(
+        TableName=callLogTableName,
+        KeyConditionExpression='user_id = :userId AND request_time > :allowTime',
+        ExpressionAttributeValues={
+            ':userId': {'S': userId},
+            ':allowTime': {'S': allowTime}
+        }
+    )
+    print('query result: ', response['Items'])
+
+    for item in response['Items']:
+        text = item['body']['S']
+        msg = item['msg']['S']
+        type = item['type']['S']
+
+        if type == 'text':
+            print('text: ', text)
+            print('msg: ', msg)        
+
+            chat_memory.save_context({"input": text}, {"output": msg})             
+
 def lambda_handler(event, context):
     print(event)
-    userId  = event['user-id']
+    userId  = event['user_id']
     print('userId: ', userId)
-    requestId  = event['request-id']
+    requestId  = event['request_id']
     print('requestId: ', requestId)
+    requestTime  = event['request_time']
+    print('requestTime: ', requestTime)
     type  = event['type']
     print('type: ', type)
     body = event['body']
@@ -682,7 +708,10 @@ def lambda_handler(event, context):
                                 msg = get_answer_using_template_with_history(text, vectorstore, chat_memory)
                                                               
                             storedMsg = str(msg).replace("\n"," ") 
-                            chat_memory.save_context({"input": text}, {"output": storedMsg})                  
+                            chat_memory.save_context({"input": text}, {"output": storedMsg})   
+
+                            allowTime = '2020-09-20 21:52:14'
+                            load_chatHistory(userId, allowTime, chat_memory)               
                         else: # ConversationalRetrievalChain
                             if isReady==False:
                                 isReady = True
@@ -764,8 +793,9 @@ def lambda_handler(event, context):
     print('msg: ', msg)
 
     item = {
-        'user-id': {'S':userId},
-        'request-id': {'S':requestId},
+        'user_id': {'S':userId},
+        'request_id': {'S':requestId},
+        'request_time': {'S':requestTime},
         'type': {'S':type},
         'body': {'S':body},
         'msg': {'S':msg}

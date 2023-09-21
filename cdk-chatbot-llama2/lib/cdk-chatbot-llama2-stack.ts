@@ -69,15 +69,15 @@ export class CdkChatbotLlama2Stack extends cdk.Stack {
     const callLogTableName = `db-call-log-for-${projectName}`;
     const callLogDataTable = new dynamodb.Table(this, `db-call-log-for-${projectName}`, {
       tableName: callLogTableName,
-      partitionKey: { name: 'user-id', type: dynamodb.AttributeType.STRING },
-      sortKey: { name: 'request-id', type: dynamodb.AttributeType.STRING }, 
+      partitionKey: { name: 'user_id', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'request_time', type: dynamodb.AttributeType.STRING }, 
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
     const callLogIndexName = `index-type-for-${projectName}`;
     callLogDataTable.addGlobalSecondaryIndex({ // GSI
       indexName: callLogIndexName,
-      partitionKey: { name: 'type', type: dynamodb.AttributeType.STRING },
+      partitionKey: { name: 'request_id', type: dynamodb.AttributeType.STRING },
     });
 
     // copy web application files into s3 bucket
@@ -387,6 +387,88 @@ export class CdkChatbotLlama2Stack extends cdk.Stack {
 
     // cloudfront setting for api gateway    
     distribution.addBehavior("/query", new origins.RestApiOrigin(api), {
+      cachePolicy: cloudFront.CachePolicy.CACHING_DISABLED,
+      allowedMethods: cloudFront.AllowedMethods.ALLOW_ALL,  
+      viewerProtocolPolicy: cloudFront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+    });
+
+    // Lambda - getHistory
+    const lambdaGetHistory = new lambda.Function(this, `lambda-gethistory-for-${projectName}`, {
+      runtime: lambda.Runtime.NODEJS_16_X, 
+      functionName: `lambda-gethistory-for-${projectName}`,
+      code: lambda.Code.fromAsset("../lambda-gethistory"), 
+      handler: "index.handler", 
+      timeout: cdk.Duration.seconds(60),
+      logRetention: logs.RetentionDays.ONE_DAY,
+      environment: {
+        tableName: callLogTableName
+      }      
+    });
+    callLogDataTable.grantReadWriteData(lambdaGetHistory); // permission for dynamo
+    
+    // POST method - history
+    const history = api.root.addResource("history");
+    history.addMethod('POST', new apiGateway.LambdaIntegration(lambdaGetHistory, {
+      passthroughBehavior: apiGateway.PassthroughBehavior.WHEN_NO_TEMPLATES,
+      credentialsRole: role,
+      integrationResponses: [{
+        statusCode: '200',
+      }], 
+      proxy:false, 
+    }), {
+      methodResponses: [  
+        {
+          statusCode: '200',
+          responseModels: {
+            'application/json': apiGateway.Model.EMPTY_MODEL,
+          }, 
+        }
+      ]
+    }); 
+
+    // cloudfront setting for api gateway    
+    distribution.addBehavior("/history", new origins.RestApiOrigin(api), {
+      cachePolicy: cloudFront.CachePolicy.CACHING_DISABLED,
+      allowedMethods: cloudFront.AllowedMethods.ALLOW_ALL,  
+      viewerProtocolPolicy: cloudFront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+    });
+
+    // Lambda - deleteItems
+    const lambdaDeleteItems = new lambda.Function(this, `lambda-deleteItems-for-${projectName}`, {
+      runtime: lambda.Runtime.NODEJS_16_X, 
+      functionName: `lambda-deleteItems-for-${projectName}`,
+      code: lambda.Code.fromAsset("../lambda-delete-items"), 
+      handler: "index.handler", 
+      timeout: cdk.Duration.seconds(60),
+      logRetention: logs.RetentionDays.ONE_DAY,
+      environment: {
+        tableName: callLogTableName
+      }      
+    });
+    callLogDataTable.grantReadWriteData(lambdaDeleteItems); // permission for dynamo
+    
+    // POST method - delete items
+    const deleteItem = api.root.addResource("delete");
+    deleteItem.addMethod('POST', new apiGateway.LambdaIntegration(lambdaDeleteItems, {
+      passthroughBehavior: apiGateway.PassthroughBehavior.WHEN_NO_TEMPLATES,
+      credentialsRole: role,
+      integrationResponses: [{
+        statusCode: '200',
+      }], 
+      proxy:false, 
+    }), {
+      methodResponses: [  
+        {
+          statusCode: '200',
+          responseModels: {
+            'application/json': apiGateway.Model.EMPTY_MODEL,
+          }, 
+        }
+      ]
+    }); 
+
+    // cloudfront setting for api gateway    
+    distribution.addBehavior("/delete", new origins.RestApiOrigin(api), {
       cachePolicy: cloudFront.CachePolicy.CACHING_DISABLED,
       allowedMethods: cloudFront.AllowedMethods.ALLOW_ALL,  
       viewerProtocolPolicy: cloudFront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
