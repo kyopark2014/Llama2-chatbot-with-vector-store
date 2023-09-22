@@ -627,6 +627,13 @@ def load_chatHistory(userId, allowTime, chat_memory):
 
             chat_memory.save_context({"input": text}, {"output": msg})             
 
+def getAllowTime():
+    d = datetime.datetime.now() - datetime.timedelta(days = 2)
+    timeStr = str(d)[0:19]
+    print('allow time: ',timeStr)
+
+    return timeStr
+
 def lambda_handler(event, context):
     print(event)
     userId  = event['user_id']
@@ -710,7 +717,7 @@ def lambda_handler(event, context):
                             storedMsg = str(msg).replace("\n"," ") 
                             chat_memory.save_context({"input": text}, {"output": storedMsg})   
 
-                            allowTime = '2020-09-20 21:52:14'
+                            allowTime = getAllowTime()
                             load_chatHistory(userId, allowTime, chat_memory)               
                         else: # ConversationalRetrievalChain
                             if isReady==False:
