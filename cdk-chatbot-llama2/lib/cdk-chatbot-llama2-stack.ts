@@ -360,7 +360,8 @@ export class CdkChatbotLlama2Stack extends cdk.Stack {
       timeout: cdk.Duration.seconds(60),
       logRetention: logs.RetentionDays.ONE_DAY,
       environment: {
-        tableName: callLogTableName
+        tableName: callLogTableName,
+        indexName: callLogIndexName
       }      
     });
     callLogDataTable.grantReadWriteData(lambdaQueryResult); // permission for dynamo
